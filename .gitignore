@@ -1,0 +1,41 @@
+# Home Assistant config (except configuration.yaml)
+config/*
+!config/configuration.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+uv.lock
+
+# IDE
+.idea/
+.vscode/
+.claude/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Linting
+.ruff_cache/
+
+# Packaging
+*.egg-info/
+dist/
+build/
+
+# Docker
+docker-compose.yaml

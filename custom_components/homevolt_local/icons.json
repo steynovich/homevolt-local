@@ -1,0 +1,125 @@
+{
+  "entity": {
+    "button": {
+      "clear_schedule": {
+        "default": "mdi:calendar-remove"
+      }
+    },
+    "binary_sensor": {
+      "mqtt_valid": {
+        "default": "mdi:check-network"
+      },
+      "wifi_connected": {
+        "default": "mdi:wifi"
+      },
+      "lte_connected": {
+        "default": "mdi:signal-5g"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "default": "mdi:battery",
+        "state": {
+          "0": "mdi:battery-outline",
+          "10": "mdi:battery-10",
+          "20": "mdi:battery-20",
+          "30": "mdi:battery-30",
+          "40": "mdi:battery-40",
+          "50": "mdi:battery-50",
+          "60": "mdi:battery-60",
+          "70": "mdi:battery-70",
+          "80": "mdi:battery-80",
+          "90": "mdi:battery-90",
+          "100": "mdi:battery"
+        }
+      },
+      "inverter_power": {
+        "default": "mdi:flash"
+      },
+      "inverter_energy_produced": {
+        "default": "mdi:lightning-bolt"
+      },
+      "inverter_energy_consumed": {
+        "default": "mdi:lightning-bolt-outline"
+      },
+      "ems_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "system_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "available_capacity": {
+        "default": "mdi:battery-plus-variant"
+      },
+      "operation_state": {
+        "default": "mdi:state-machine"
+      },
+      "mains_voltage": {
+        "default": "mdi:transmission-tower"
+      },
+      "mains_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "uptime": {
+        "default": "mdi:timer-outline"
+      },
+      "wifi_rssi": {
+        "default": "mdi:wifi-strength-3"
+      },
+      "lte_rssi": {
+        "default": "mdi:signal-cellular-3"
+      },
+      "ems_mode": {
+        "default": "mdi:connection"
+      },
+      "ota_version": {
+        "default": "mdi:update"
+      },
+      "firmware_version": {
+        "default": "mdi:chip"
+      }
+    },
+    "select": {
+      "ledstrip_mode": {
+        "default": "mdi:led-strip"
+      }
+    },
+    "switch": {
+      "settings_local": {
+        "default": "mdi:home-lock"
+      },
+      "ota_enable": {
+        "default": "mdi:update"
+      },
+      "ota_enable_esp32": {
+        "default": "mdi:update"
+      },
+      "ota_enable_hub_web": {
+        "default": "mdi:update"
+      },
+      "ota_enable_bg95_m3": {
+        "default": "mdi:update"
+      }
+    },
+    "number": {
+      "ecu_main_fuse_size_a": {
+        "default": "mdi:fuse"
+      },
+      "ecu_group_fuse_size_a": {
+        "default": "mdi:fuse"
+      },
+      "ledstrip_bright_max": {
+        "default": "mdi:brightness-7"
+      },
+      "ledstrip_bright_min": {
+        "default": "mdi:brightness-5"
+      },
+      "ledstrip_mode_on_hue": {
+        "default": "mdi:palette"
+      },
+      "ledstrip_mode_on_saturation": {
+        "default": "mdi:palette"
+      }
+    }
+  }
+}

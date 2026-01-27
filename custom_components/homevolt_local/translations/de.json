@@ -1,0 +1,498 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mit Homevolt verbinden",
+        "description": "Geben Sie die Verbindungsdaten für Ihr Homevolt-Batteriesystem ein.",
+        "data": {
+          "host": "Host",
+          "username": "Benutzername (optional)",
+          "password": "Passwort (optional)"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname (z.B. homevolt-12345.local oder 192.168.1.100)",
+          "username": "Nur erforderlich, wenn Authentifizierung aktiviert ist",
+          "password": "Nur erforderlich, wenn Authentifizierung aktiviert ist"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Homevolt erneut authentifizieren",
+        "description": "Bitte geben Sie neue Anmeldedaten für {host} ein.",
+        "data": {
+          "username": "Benutzername (optional)",
+          "password": "Passwort (optional)"
+        },
+        "data_description": {
+          "username": "Nur erforderlich, wenn Authentifizierung aktiviert ist",
+          "password": "Nur erforderlich, wenn Authentifizierung aktiviert ist"
+        }
+      },
+      "reconfigure": {
+        "title": "Homevolt neu konfigurieren",
+        "description": "Aktualisieren Sie die Verbindungsdaten für Ihr Homevolt-Batteriesystem.",
+        "data": {
+          "host": "Host",
+          "username": "Benutzername (optional)",
+          "password": "Passwort (optional)"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname (z.B. homevolt-12345.local oder 192.168.1.100)",
+          "username": "Nur erforderlich, wenn Authentifizierung aktiviert ist",
+          "password": "Nur erforderlich, wenn Authentifizierung aktiviert ist"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Homevolt-Gerät entdeckt",
+        "description": "Ein Homevolt-Gerät wurde unter {host} entdeckt. Geben Sie Anmeldedaten ein, wenn Authentifizierung aktiviert ist.",
+        "data": {
+          "username": "Benutzername (optional)",
+          "password": "Passwort (optional)"
+        },
+        "data_description": {
+          "username": "Nur erforderlich, wenn Authentifizierung aktiviert ist",
+          "password": "Nur erforderlich, wenn Authentifizierung aktiviert ist"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum Homevolt-Gerät fehlgeschlagen",
+      "invalid_auth": "Ungültiger Benutzername oder Passwort",
+      "rate_limited": "Zu viele fehlgeschlagene Anmeldeversuche. Bitte warten Sie 5 Minuten und versuchen Sie es erneut",
+      "unknown": "Unerwarteter Fehler aufgetreten"
+    },
+    "abort": {
+      "already_configured": "Dieses Gerät ist bereits konfiguriert",
+      "reauth_successful": "Erneute Authentifizierung erfolgreich",
+      "reconfigure_successful": "Neukonfiguration erfolgreich",
+      "different_device": "Das Gerät unter dieser Adresse unterscheidet sich vom ursprünglichen Gerät"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Verbindung zu {host} nicht möglich"
+    },
+    "invalid_auth": {
+      "message": "Ungültige Anmeldedaten für {host}"
+    },
+    "rate_limited": {
+      "message": "Ratenbegrenzung aufgrund zu vieler fehlgeschlagener Authentifizierungsversuche. Warten Sie 5 Minuten."
+    },
+    "not_local_mode": {
+      "message": "Zeitplan kann nicht gesetzt werden: Gerät ist nicht im lokalen Modus. Aktivieren Sie zuerst 'Lokale Einstellungen', um Fernsteuerung durch Tibber zu verhindern."
+    }
+  },
+  "services": {
+    "clear_schedule": {
+      "name": "Zeitplan löschen",
+      "description": "Alle geplanten Ladeeinträge auf dem Homevolt-Gerät löschen",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, dessen Zeitplan gelöscht werden soll"
+        }
+      }
+    },
+    "set_idle": {
+      "name": "Batterie auf Leerlauf setzen",
+      "description": "Die Homevolt-Batterie auf Leerlaufmodus setzen (kein Laden/Entladen). Erfordert lokalen Modus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, das auf Leerlauf gesetzt werden soll"
+        },
+        "offline": {
+          "name": "Offline",
+          "description": "Wechselrichter im Leerlaufmodus offline nehmen"
+        }
+      }
+    },
+    "set_charge": {
+      "name": "Batterie auf Laden setzen",
+      "description": "Die Homevolt-Batterie auf Lademodus setzen (Wechselrichter-Laden aus Netz/Solar). Erfordert lokalen Modus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, das auf Laden gesetzt werden soll"
+        },
+        "setpoint": {
+          "name": "Leistungssollwert",
+          "description": "Optionaler Leistungssollwert in Watt"
+        },
+        "min_soc": {
+          "name": "Minimaler Ladezustand",
+          "description": "Optionaler minimaler Ladezustand (%)"
+        },
+        "max_soc": {
+          "name": "Maximaler Ladezustand",
+          "description": "Optionaler maximaler Ladezustand (%)"
+        }
+      }
+    },
+    "set_discharge": {
+      "name": "Batterie auf Entladen setzen",
+      "description": "Die Homevolt-Batterie auf Entlademodus setzen (Wechselrichter-Entladen ins Haus/Netz). Erfordert lokalen Modus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, das auf Entladen gesetzt werden soll"
+        },
+        "setpoint": {
+          "name": "Leistungssollwert",
+          "description": "Optionaler Leistungssollwert in Watt"
+        },
+        "min_soc": {
+          "name": "Minimaler Ladezustand",
+          "description": "Optionaler minimaler Ladezustand (%)"
+        },
+        "max_soc": {
+          "name": "Maximaler Ladezustand",
+          "description": "Optionaler maximaler Ladezustand (%)"
+        }
+      }
+    },
+    "set_grid_charge": {
+      "name": "Batterie auf Netzladung setzen",
+      "description": "Die Homevolt-Batterie auf Netzlademodus setzen (erzwungenes Laden aus dem Netz). Erfordert lokalen Modus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, das auf Netzladung gesetzt werden soll"
+        },
+        "setpoint": {
+          "name": "Leistungssollwert",
+          "description": "Optionaler Leistungssollwert in Watt"
+        },
+        "min_soc": {
+          "name": "Minimaler Ladezustand",
+          "description": "Optionaler minimaler Ladezustand (%)"
+        },
+        "max_soc": {
+          "name": "Maximaler Ladezustand",
+          "description": "Optionaler maximaler Ladezustand (%)"
+        }
+      }
+    },
+    "set_grid_discharge": {
+      "name": "Batterie auf Netzentladung setzen",
+      "description": "Die Homevolt-Batterie auf Netzentlademodus setzen (erzwungenes Entladen ins Netz). Erfordert lokalen Modus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, das auf Netzentladung gesetzt werden soll"
+        },
+        "setpoint": {
+          "name": "Leistungssollwert",
+          "description": "Optionaler Leistungssollwert in Watt"
+        },
+        "min_soc": {
+          "name": "Minimaler Ladezustand",
+          "description": "Optionaler minimaler Ladezustand (%)"
+        },
+        "max_soc": {
+          "name": "Maximaler Ladezustand",
+          "description": "Optionaler maximaler Ladezustand (%)"
+        }
+      }
+    },
+    "set_grid_charge_discharge": {
+      "name": "Batterie auf Netz-Laden/Entladen setzen",
+      "description": "Die Homevolt-Batterie auf bidirektionalen Netzmodus setzen (ermöglicht Laden aus und Entladen ins Netz). Erfordert lokalen Modus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, das auf Netz-Laden/Entladen gesetzt werden soll"
+        },
+        "setpoint": {
+          "name": "Leistungssollwert",
+          "description": "Leistungssollwert in Watt (erforderlich)"
+        },
+        "charge_setpoint": {
+          "name": "Max. Ladeleistung",
+          "description": "Optionale maximale Ladeleistung in Watt"
+        },
+        "discharge_setpoint": {
+          "name": "Max. Entladeleistung",
+          "description": "Optionale maximale Entladeleistung in Watt"
+        },
+        "min_soc": {
+          "name": "Minimaler Ladezustand",
+          "description": "Optionaler minimaler Ladezustand (%)"
+        },
+        "max_soc": {
+          "name": "Maximaler Ladezustand",
+          "description": "Optionaler maximaler Ladezustand (%)"
+        }
+      }
+    },
+    "set_solar_charge": {
+      "name": "Batterie auf Solarladen setzen",
+      "description": "Die Homevolt-Batterie auf Solarlademodus setzen (nur Laden aus Solarproduktion). Erfordert lokalen Modus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, das auf Solarladen gesetzt werden soll"
+        },
+        "setpoint": {
+          "name": "Leistungssollwert",
+          "description": "Optionaler Leistungssollwert in Watt"
+        },
+        "min_soc": {
+          "name": "Minimaler Ladezustand",
+          "description": "Optionaler minimaler Ladezustand (%)"
+        },
+        "max_soc": {
+          "name": "Maximaler Ladezustand",
+          "description": "Optionaler maximaler Ladezustand (%)"
+        }
+      }
+    },
+    "set_solar_charge_discharge": {
+      "name": "Batterie auf Solar-Laden/Entladen setzen",
+      "description": "Die Homevolt-Batterie auf Solar-Laden/Entladen-Modus setzen (solarbasiertes Netzmanagement). Erfordert lokalen Modus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, das auf Solar-Laden/Entladen gesetzt werden soll"
+        },
+        "setpoint": {
+          "name": "Leistungssollwert",
+          "description": "Optionaler Leistungssollwert in Watt"
+        },
+        "charge_setpoint": {
+          "name": "Max. Ladeleistung",
+          "description": "Optionale maximale Ladeleistung in Watt"
+        },
+        "discharge_setpoint": {
+          "name": "Max. Entladeleistung",
+          "description": "Optionale maximale Entladeleistung in Watt"
+        },
+        "min_soc": {
+          "name": "Minimaler Ladezustand",
+          "description": "Optionaler minimaler Ladezustand (%)"
+        },
+        "max_soc": {
+          "name": "Maximaler Ladezustand",
+          "description": "Optionaler maximaler Ladezustand (%)"
+        }
+      }
+    },
+    "set_full_solar_export": {
+      "name": "Batterie auf Vollständigen Solarexport setzen",
+      "description": "Die Homevolt-Batterie auf vollständigen Solarexportmodus setzen (gesamte Solarproduktion exportieren). Erfordert lokalen Modus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, das auf vollständigen Solarexport gesetzt werden soll"
+        },
+        "setpoint": {
+          "name": "Leistungssollwert",
+          "description": "Optionaler Leistungssollwert in Watt"
+        },
+        "min_soc": {
+          "name": "Minimaler Ladezustand",
+          "description": "Optionaler minimaler Ladezustand (%)"
+        },
+        "max_soc": {
+          "name": "Maximaler Ladezustand",
+          "description": "Optionaler maximaler Ladezustand (%)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "clear_schedule": {
+        "name": "Zeitplan löschen"
+      },
+      "set_idle": {
+        "name": "Auf Leerlauf setzen"
+      },
+      "set_charge": {
+        "name": "Auf Laden setzen"
+      },
+      "set_discharge": {
+        "name": "Auf Entladen setzen"
+      },
+      "set_solar_charge": {
+        "name": "Auf Solarladen setzen"
+      },
+      "set_full_solar_export": {
+        "name": "Auf vollständigen Solarexport setzen"
+      }
+    },
+    "binary_sensor": {
+      "mqtt_valid": {
+        "name": "MQTT gültig"
+      },
+      "wifi_connected": {
+        "name": "WLAN verbunden"
+      },
+      "lte_connected": {
+        "name": "LTE verbunden"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "name": "Batterieladezustand"
+      },
+      "battery_power": {
+        "name": "Batterieleistung"
+      },
+      "grid_power": {
+        "name": "Netzleistung"
+      },
+      "solar_power": {
+        "name": "Solarleistung"
+      },
+      "load_power": {
+        "name": "Verbrauchsleistung"
+      },
+      "inverter_power": {
+        "name": "Wechselrichterleistung"
+      },
+      "grid_energy_imported": {
+        "name": "Importierte netzenergie"
+      },
+      "grid_energy_exported": {
+        "name": "Exportierte netzenergie"
+      },
+      "solar_energy": {
+        "name": "Solarenergie"
+      },
+      "battery_energy_imported": {
+        "name": "Batterieladeenergie"
+      },
+      "battery_energy_exported": {
+        "name": "Batterieentladeenergie"
+      },
+      "inverter_energy_produced": {
+        "name": "Wechselrichter erzeugte energie"
+      },
+      "inverter_energy_consumed": {
+        "name": "Wechselrichter verbrauchte energie"
+      },
+      "ems_frequency": {
+        "name": "EMS-frequenz"
+      },
+      "system_temperature": {
+        "name": "Systemtemperatur"
+      },
+      "available_capacity": {
+        "name": "Verfügbare kapazität"
+      },
+      "operation_state": {
+        "name": "Betriebszustand"
+      },
+      "battery_state": {
+        "name": "Batteriestatus"
+      },
+      "mains_voltage": {
+        "name": "Netzspannung"
+      },
+      "mains_frequency": {
+        "name": "Netzfrequenz"
+      },
+      "uptime": {
+        "name": "Betriebszeit"
+      },
+      "wifi_rssi": {
+        "name": "WLAN-signalstärke"
+      },
+      "lte_rssi": {
+        "name": "LTE-Signalstärke"
+      },
+      "schedule_mode": {
+        "name": "Zeitplan"
+      },
+      "ems_mode": {
+        "name": "EMS-modus"
+      },
+      "rated_power": {
+        "name": "Nennleistung"
+      },
+      "ota_version": {
+        "name": "OTA-Version"
+      },
+      "firmware_version": {
+        "name": "Firmware-Version"
+      },
+      "alarm_count": {
+        "name": "Alarmanzahl"
+      },
+      "warning_count": {
+        "name": "Warnungsanzahl"
+      },
+      "info_count": {
+        "name": "Infoanzahl"
+      },
+      "avail_charge_power": {
+        "name": "Verfügbare Ladeleistung"
+      },
+      "avail_discharge_power": {
+        "name": "Verfügbare Entladeleistung"
+      },
+      "avail_charge_energy": {
+        "name": "Verfügbare Ladeenergie"
+      },
+      "avail_discharge_energy": {
+        "name": "Verfügbare Entladeenergie"
+      },
+      "avail_inverter_charge_power": {
+        "name": "Verfügbare Wechselrichter-Ladeleistung"
+      },
+      "avail_inverter_discharge_power": {
+        "name": "Verfügbare Wechselrichter-Entladeleistung"
+      }
+    },
+    "select": {
+      "ledstrip_mode": {
+        "name": "LED-streifen modus",
+        "state": {
+          "unset": "Nicht gesetzt",
+          "off": "Aus",
+          "on": "Ein",
+          "soc": "Ladezustand",
+          "dem": "Bedarf",
+          "ser": "Service"
+        }
+      }
+    },
+    "switch": {
+      "settings_local": {
+        "name": "Lokale einstellungen"
+      },
+      "ota_enable": {
+        "name": "OTA-updates aktiviert"
+      },
+      "ota_enable_esp32": {
+        "name": "OTA-update ESP32"
+      },
+      "ota_enable_hub_web": {
+        "name": "OTA-update hub web"
+      },
+      "ota_enable_bg95_m3": {
+        "name": "OTA-update BG95-M3"
+      }
+    },
+    "number": {
+      "ecu_main_fuse_size_a": {
+        "name": "Hauptsicherungsgröße"
+      },
+      "ecu_group_fuse_size_a": {
+        "name": "Gruppensicherungsgröße"
+      },
+      "ledstrip_bright_max": {
+        "name": "LED-Streifen max. Helligkeit"
+      },
+      "ledstrip_bright_min": {
+        "name": "LED-Streifen min. Helligkeit"
+      },
+      "ledstrip_mode_on_hue": {
+        "name": "LED-Streifen Farbton"
+      },
+      "ledstrip_mode_on_saturation": {
+        "name": "LED-Streifen Sättigung"
+      }
+    }
+  }
+}

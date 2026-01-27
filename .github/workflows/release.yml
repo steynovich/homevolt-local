@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create zip file
+        run: |
+          cd custom_components
+          zip -r homevolt_local.zip homevolt_local/
+          mv homevolt_local.zip ..
+
+      - name: Upload zip file to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: homevolt_local.zip
+          asset_name: homevolt_local.zip
+          tag: ${{ github.ref }}
+          overwrite: true

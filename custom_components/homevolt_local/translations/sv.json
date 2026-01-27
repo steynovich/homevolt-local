@@ -1,0 +1,498 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Anslut till Homevolt",
+        "description": "Ange anslutningsuppgifter för ditt Homevolt-batterisystem.",
+        "data": {
+          "host": "Värd",
+          "username": "Användarnamn (valfritt)",
+          "password": "Lösenord (valfritt)"
+        },
+        "data_description": {
+          "host": "IP-adress eller värdnamn (t.ex. homevolt-12345.local eller 192.168.1.100)",
+          "username": "Krävs endast om autentisering är aktiverad",
+          "password": "Krävs endast om autentisering är aktiverad"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Autentisera Homevolt igen",
+        "description": "Ange nya inloggningsuppgifter för {host}.",
+        "data": {
+          "username": "Användarnamn (valfritt)",
+          "password": "Lösenord (valfritt)"
+        },
+        "data_description": {
+          "username": "Krävs endast om autentisering är aktiverad",
+          "password": "Krävs endast om autentisering är aktiverad"
+        }
+      },
+      "reconfigure": {
+        "title": "Konfigurera om Homevolt",
+        "description": "Uppdatera anslutningsuppgifterna för ditt Homevolt-batterisystem.",
+        "data": {
+          "host": "Värd",
+          "username": "Användarnamn (valfritt)",
+          "password": "Lösenord (valfritt)"
+        },
+        "data_description": {
+          "host": "IP-adress eller värdnamn (t.ex. homevolt-12345.local eller 192.168.1.100)",
+          "username": "Krävs endast om autentisering är aktiverad",
+          "password": "Krävs endast om autentisering är aktiverad"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Homevolt-enhet upptäckt",
+        "description": "En Homevolt-enhet upptäcktes på {host}. Ange inloggningsuppgifter om autentisering är aktiverad.",
+        "data": {
+          "username": "Användarnamn (valfritt)",
+          "password": "Lösenord (valfritt)"
+        },
+        "data_description": {
+          "username": "Krävs endast om autentisering är aktiverad",
+          "password": "Krävs endast om autentisering är aktiverad"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kunde inte ansluta till Homevolt-enheten",
+      "invalid_auth": "Ogiltigt användarnamn eller lösenord",
+      "rate_limited": "För många misslyckade inloggningsförsök. Vänta 5 minuter och försök igen",
+      "unknown": "Ett oväntat fel inträffade"
+    },
+    "abort": {
+      "already_configured": "Denna enhet är redan konfigurerad",
+      "reauth_successful": "Omautentisering lyckades",
+      "reconfigure_successful": "Omkonfigurering lyckades",
+      "different_device": "Enheten på denna adress skiljer sig från den ursprungliga enheten"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Kan inte ansluta till {host}"
+    },
+    "invalid_auth": {
+      "message": "Ogiltiga inloggningsuppgifter för {host}"
+    },
+    "rate_limited": {
+      "message": "Hastighetsbegränsad på grund av för många misslyckade autentiseringsförsök. Vänta 5 minuter."
+    },
+    "not_local_mode": {
+      "message": "Kan inte sätta schema: enheten är inte i lokalt läge. Aktivera 'Lokala inställningar' först för att förhindra fjärrstyrning från Tibber."
+    }
+  },
+  "services": {
+    "clear_schedule": {
+      "name": "Rensa schema",
+      "description": "Rensa alla schemalagda laddningsposter på Homevolt-enheten",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten vars schema ska rensas"
+        }
+      }
+    },
+    "set_idle": {
+      "name": "Sätt batteri till viloläge",
+      "description": "Sätt Homevolt-batteriet i viloläge (ingen laddning/urladdning). Kräver lokalt läge.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som ska sättas till viloläge"
+        },
+        "offline": {
+          "name": "Offline",
+          "description": "Koppla från växelriktaren i viloläge"
+        }
+      }
+    },
+    "set_charge": {
+      "name": "Sätt batteri till laddning",
+      "description": "Sätt Homevolt-batteriet i laddningsläge (växelriktarladdning från nät/sol). Kräver lokalt läge.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som ska sättas till laddning"
+        },
+        "setpoint": {
+          "name": "Effektbörvärde",
+          "description": "Valfritt effektbörvärde i watt"
+        },
+        "min_soc": {
+          "name": "Minsta laddningsnivå",
+          "description": "Valfri minsta laddningsnivå (%)"
+        },
+        "max_soc": {
+          "name": "Högsta laddningsnivå",
+          "description": "Valfri högsta laddningsnivå (%)"
+        }
+      }
+    },
+    "set_discharge": {
+      "name": "Sätt batteri till urladdning",
+      "description": "Sätt Homevolt-batteriet i urladdningsläge (växelriktarurladdning till hem/nät). Kräver lokalt läge.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som ska sättas till urladdning"
+        },
+        "setpoint": {
+          "name": "Effektbörvärde",
+          "description": "Valfritt effektbörvärde i watt"
+        },
+        "min_soc": {
+          "name": "Minsta laddningsnivå",
+          "description": "Valfri minsta laddningsnivå (%)"
+        },
+        "max_soc": {
+          "name": "Högsta laddningsnivå",
+          "description": "Valfri högsta laddningsnivå (%)"
+        }
+      }
+    },
+    "set_grid_charge": {
+      "name": "Sätt batteri till nätladdning",
+      "description": "Sätt Homevolt-batteriet i nätladdningsläge (tvingad laddning från nätet). Kräver lokalt läge.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som ska sättas till nätladdning"
+        },
+        "setpoint": {
+          "name": "Effektbörvärde",
+          "description": "Valfritt effektbörvärde i watt"
+        },
+        "min_soc": {
+          "name": "Minsta laddningsnivå",
+          "description": "Valfri minsta laddningsnivå (%)"
+        },
+        "max_soc": {
+          "name": "Högsta laddningsnivå",
+          "description": "Valfri högsta laddningsnivå (%)"
+        }
+      }
+    },
+    "set_grid_discharge": {
+      "name": "Sätt batteri till näturladdning",
+      "description": "Sätt Homevolt-batteriet i näturladdningsläge (tvingad urladdning till nätet). Kräver lokalt läge.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som ska sättas till näturladdning"
+        },
+        "setpoint": {
+          "name": "Effektbörvärde",
+          "description": "Valfritt effektbörvärde i watt"
+        },
+        "min_soc": {
+          "name": "Minsta laddningsnivå",
+          "description": "Valfri minsta laddningsnivå (%)"
+        },
+        "max_soc": {
+          "name": "Högsta laddningsnivå",
+          "description": "Valfri högsta laddningsnivå (%)"
+        }
+      }
+    },
+    "set_grid_charge_discharge": {
+      "name": "Sätt batteri till nätladdning/urladdning",
+      "description": "Sätt Homevolt-batteriet i dubbelriktat nätläge (tillåter både laddning från och urladdning till nätet). Kräver lokalt läge.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som ska sättas till nätladdning/urladdning"
+        },
+        "setpoint": {
+          "name": "Effektbörvärde",
+          "description": "Effektbörvärde i watt (obligatoriskt)"
+        },
+        "charge_setpoint": {
+          "name": "Max laddningseffekt",
+          "description": "Valfri maximal laddningseffekt i watt"
+        },
+        "discharge_setpoint": {
+          "name": "Max urladdningseffekt",
+          "description": "Valfri maximal urladdningseffekt i watt"
+        },
+        "min_soc": {
+          "name": "Minsta laddningsnivå",
+          "description": "Valfri minsta laddningsnivå (%)"
+        },
+        "max_soc": {
+          "name": "Högsta laddningsnivå",
+          "description": "Valfri högsta laddningsnivå (%)"
+        }
+      }
+    },
+    "set_solar_charge": {
+      "name": "Sätt batteri till solladdning",
+      "description": "Sätt Homevolt-batteriet i solladdningsläge (laddning endast från solproduktion). Kräver lokalt läge.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som ska sättas till solladdning"
+        },
+        "setpoint": {
+          "name": "Effektbörvärde",
+          "description": "Valfritt effektbörvärde i watt"
+        },
+        "min_soc": {
+          "name": "Minsta laddningsnivå",
+          "description": "Valfri minsta laddningsnivå (%)"
+        },
+        "max_soc": {
+          "name": "Högsta laddningsnivå",
+          "description": "Valfri högsta laddningsnivå (%)"
+        }
+      }
+    },
+    "set_solar_charge_discharge": {
+      "name": "Sätt batteri till solladdning/urladdning",
+      "description": "Sätt Homevolt-batteriet i solladdning/urladdningsläge (solbaserad näthantering). Kräver lokalt läge.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som ska sättas till solladdning/urladdning"
+        },
+        "setpoint": {
+          "name": "Effektbörvärde",
+          "description": "Valfritt effektbörvärde i watt"
+        },
+        "charge_setpoint": {
+          "name": "Max laddningseffekt",
+          "description": "Valfri maximal laddningseffekt i watt"
+        },
+        "discharge_setpoint": {
+          "name": "Max urladdningseffekt",
+          "description": "Valfri maximal urladdningseffekt i watt"
+        },
+        "min_soc": {
+          "name": "Minsta laddningsnivå",
+          "description": "Valfri minsta laddningsnivå (%)"
+        },
+        "max_soc": {
+          "name": "Högsta laddningsnivå",
+          "description": "Valfri högsta laddningsnivå (%)"
+        }
+      }
+    },
+    "set_full_solar_export": {
+      "name": "Sätt batteri till fullständig solexport",
+      "description": "Sätt Homevolt-batteriet i fullständigt solexportläge (exportera all solproduktion). Kräver lokalt läge.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som ska sättas till fullständig solexport"
+        },
+        "setpoint": {
+          "name": "Effektbörvärde",
+          "description": "Valfritt effektbörvärde i watt"
+        },
+        "min_soc": {
+          "name": "Minsta laddningsnivå",
+          "description": "Valfri minsta laddningsnivå (%)"
+        },
+        "max_soc": {
+          "name": "Högsta laddningsnivå",
+          "description": "Valfri högsta laddningsnivå (%)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "clear_schedule": {
+        "name": "Rensa schema"
+      },
+      "set_idle": {
+        "name": "Sätt till viloläge"
+      },
+      "set_charge": {
+        "name": "Sätt till laddning"
+      },
+      "set_discharge": {
+        "name": "Sätt till urladdning"
+      },
+      "set_solar_charge": {
+        "name": "Sätt till solladdning"
+      },
+      "set_full_solar_export": {
+        "name": "Sätt till fullständig solexport"
+      }
+    },
+    "binary_sensor": {
+      "mqtt_valid": {
+        "name": "MQTT giltig"
+      },
+      "wifi_connected": {
+        "name": "WiFi ansluten"
+      },
+      "lte_connected": {
+        "name": "LTE ansluten"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "name": "Batteriladdningsnivå"
+      },
+      "battery_power": {
+        "name": "Batterieffekt"
+      },
+      "grid_power": {
+        "name": "Näteffekt"
+      },
+      "solar_power": {
+        "name": "Soleffekt"
+      },
+      "load_power": {
+        "name": "Lasteffekt"
+      },
+      "inverter_power": {
+        "name": "Växelriktareffekt"
+      },
+      "grid_energy_imported": {
+        "name": "Importerad nätenergi"
+      },
+      "grid_energy_exported": {
+        "name": "Exporterad nätenergi"
+      },
+      "solar_energy": {
+        "name": "Solenergi"
+      },
+      "battery_energy_imported": {
+        "name": "Batteriladdningsenergi"
+      },
+      "battery_energy_exported": {
+        "name": "Batteriurladdningsenergi"
+      },
+      "inverter_energy_produced": {
+        "name": "Producerad växelriktarenergi"
+      },
+      "inverter_energy_consumed": {
+        "name": "Förbrukad växelriktarenergi"
+      },
+      "ems_frequency": {
+        "name": "EMS-frekvens"
+      },
+      "system_temperature": {
+        "name": "Systemtemperatur"
+      },
+      "available_capacity": {
+        "name": "Tillgänglig kapacitet"
+      },
+      "operation_state": {
+        "name": "Driftstatus"
+      },
+      "battery_state": {
+        "name": "Batteristatus"
+      },
+      "mains_voltage": {
+        "name": "Nätspänning"
+      },
+      "mains_frequency": {
+        "name": "Nätfrekvens"
+      },
+      "uptime": {
+        "name": "Drifttid"
+      },
+      "wifi_rssi": {
+        "name": "WiFi-signalstyrka"
+      },
+      "lte_rssi": {
+        "name": "LTE-signalstyrka"
+      },
+      "schedule_mode": {
+        "name": "Schema"
+      },
+      "ems_mode": {
+        "name": "EMS-läge"
+      },
+      "rated_power": {
+        "name": "Märkeffekt"
+      },
+      "ota_version": {
+        "name": "OTA-version"
+      },
+      "firmware_version": {
+        "name": "Firmware-version"
+      },
+      "alarm_count": {
+        "name": "Antal larm"
+      },
+      "warning_count": {
+        "name": "Antal varningar"
+      },
+      "info_count": {
+        "name": "Antal infomeddelanden"
+      },
+      "avail_charge_power": {
+        "name": "Tillgänglig laddningseffekt"
+      },
+      "avail_discharge_power": {
+        "name": "Tillgänglig urladdningseffekt"
+      },
+      "avail_charge_energy": {
+        "name": "Tillgänglig laddningsenergi"
+      },
+      "avail_discharge_energy": {
+        "name": "Tillgänglig urladdningsenergi"
+      },
+      "avail_inverter_charge_power": {
+        "name": "Tillgänglig växelriktare-laddningseffekt"
+      },
+      "avail_inverter_discharge_power": {
+        "name": "Tillgänglig växelriktare-urladdningseffekt"
+      }
+    },
+    "select": {
+      "ledstrip_mode": {
+        "name": "LED-remsa läge",
+        "state": {
+          "unset": "Ej inställd",
+          "off": "Av",
+          "on": "På",
+          "soc": "Laddningsnivå",
+          "dem": "Efterfrågan",
+          "ser": "Service"
+        }
+      }
+    },
+    "switch": {
+      "settings_local": {
+        "name": "Lokala inställningar"
+      },
+      "ota_enable": {
+        "name": "OTA-uppdateringar aktiverade"
+      },
+      "ota_enable_esp32": {
+        "name": "OTA-uppdatering ESP32"
+      },
+      "ota_enable_hub_web": {
+        "name": "OTA-uppdatering hub web"
+      },
+      "ota_enable_bg95_m3": {
+        "name": "OTA-uppdatering BG95-M3"
+      }
+    },
+    "number": {
+      "ecu_main_fuse_size_a": {
+        "name": "Huvudsäkringsstorlek"
+      },
+      "ecu_group_fuse_size_a": {
+        "name": "Gruppsäkringsstorlek"
+      },
+      "ledstrip_bright_max": {
+        "name": "LED-remsa max ljusstyrka"
+      },
+      "ledstrip_bright_min": {
+        "name": "LED-remsa min ljusstyrka"
+      },
+      "ledstrip_mode_on_hue": {
+        "name": "LED-remsa nyans"
+      },
+      "ledstrip_mode_on_saturation": {
+        "name": "LED-remsa mättnad"
+      }
+    }
+  }
+}

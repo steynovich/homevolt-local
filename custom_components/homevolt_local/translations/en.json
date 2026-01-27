@@ -1,0 +1,498 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Homevolt",
+        "description": "Enter the connection details for your Homevolt battery system.",
+        "data": {
+          "host": "Host",
+          "username": "Username (optional)",
+          "password": "Password (optional)"
+        },
+        "data_description": {
+          "host": "IP address or hostname (e.g., homevolt-12345.local or 192.168.1.100)",
+          "username": "Only required if authentication is enabled",
+          "password": "Only required if authentication is enabled"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Homevolt",
+        "description": "Please enter new credentials for {host}.",
+        "data": {
+          "username": "Username (optional)",
+          "password": "Password (optional)"
+        },
+        "data_description": {
+          "username": "Only required if authentication is enabled",
+          "password": "Only required if authentication is enabled"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Homevolt",
+        "description": "Update the connection details for your Homevolt battery system.",
+        "data": {
+          "host": "Host",
+          "username": "Username (optional)",
+          "password": "Password (optional)"
+        },
+        "data_description": {
+          "host": "IP address or hostname (e.g., homevolt-12345.local or 192.168.1.100)",
+          "username": "Only required if authentication is enabled",
+          "password": "Only required if authentication is enabled"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered Homevolt Device",
+        "description": "A Homevolt device was discovered at {host}. Enter credentials if authentication is enabled.",
+        "data": {
+          "username": "Username (optional)",
+          "password": "Password (optional)"
+        },
+        "data_description": {
+          "username": "Only required if authentication is enabled",
+          "password": "Only required if authentication is enabled"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Homevolt device",
+      "invalid_auth": "Invalid username or password",
+      "rate_limited": "Too many failed login attempts. Please wait 5 minutes and try again",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This device is already configured",
+      "reauth_successful": "Reauthentication successful",
+      "reconfigure_successful": "Reconfiguration successful",
+      "different_device": "The device at this address is different from the original device"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to {host}"
+    },
+    "invalid_auth": {
+      "message": "Invalid credentials for {host}"
+    },
+    "rate_limited": {
+      "message": "Rate limited due to too many failed auth attempts. Wait 5 minutes."
+    },
+    "not_local_mode": {
+      "message": "Cannot set schedule: device is not in local mode. Enable 'Settings local' first to prevent remote overrides from Tibber."
+    }
+  },
+  "services": {
+    "clear_schedule": {
+      "name": "Clear schedule",
+      "description": "Clear all scheduled charging entries on the Homevolt device",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to clear the schedule for"
+        }
+      }
+    },
+    "set_idle": {
+      "name": "Set battery to idle",
+      "description": "Set the Homevolt battery to idle mode (no charge/discharge). Requires local mode to be enabled.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to set to idle"
+        },
+        "offline": {
+          "name": "Offline",
+          "description": "Take inverter offline during idle mode"
+        }
+      }
+    },
+    "set_charge": {
+      "name": "Set battery to charge",
+      "description": "Set the Homevolt battery to charge mode (inverter charge from grid/solar). Requires local mode to be enabled.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to set to charge"
+        },
+        "setpoint": {
+          "name": "Power setpoint",
+          "description": "Optional power setpoint in watts"
+        },
+        "min_soc": {
+          "name": "Minimum SOC",
+          "description": "Optional minimum state of charge (%)"
+        },
+        "max_soc": {
+          "name": "Maximum SOC",
+          "description": "Optional maximum state of charge (%)"
+        }
+      }
+    },
+    "set_discharge": {
+      "name": "Set battery to discharge",
+      "description": "Set the Homevolt battery to discharge mode (inverter discharge to home/grid). Requires local mode to be enabled.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to set to discharge"
+        },
+        "setpoint": {
+          "name": "Power setpoint",
+          "description": "Optional power setpoint in watts"
+        },
+        "min_soc": {
+          "name": "Minimum SOC",
+          "description": "Optional minimum state of charge (%)"
+        },
+        "max_soc": {
+          "name": "Maximum SOC",
+          "description": "Optional maximum state of charge (%)"
+        }
+      }
+    },
+    "set_grid_charge": {
+      "name": "Set battery to grid charge",
+      "description": "Set the Homevolt battery to grid charge mode (force charge from grid). Requires local mode to be enabled.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to set to grid charge"
+        },
+        "setpoint": {
+          "name": "Power setpoint",
+          "description": "Optional power setpoint in watts"
+        },
+        "min_soc": {
+          "name": "Minimum SOC",
+          "description": "Optional minimum state of charge (%)"
+        },
+        "max_soc": {
+          "name": "Maximum SOC",
+          "description": "Optional maximum state of charge (%)"
+        }
+      }
+    },
+    "set_grid_discharge": {
+      "name": "Set battery to grid discharge",
+      "description": "Set the Homevolt battery to grid discharge mode (force discharge to grid). Requires local mode to be enabled.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to set to grid discharge"
+        },
+        "setpoint": {
+          "name": "Power setpoint",
+          "description": "Optional power setpoint in watts"
+        },
+        "min_soc": {
+          "name": "Minimum SOC",
+          "description": "Optional minimum state of charge (%)"
+        },
+        "max_soc": {
+          "name": "Maximum SOC",
+          "description": "Optional maximum state of charge (%)"
+        }
+      }
+    },
+    "set_grid_charge_discharge": {
+      "name": "Set battery to grid charge/discharge",
+      "description": "Set the Homevolt battery to bidirectional grid mode (allows both charging from and discharging to grid). Requires local mode to be enabled.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to set to grid charge/discharge"
+        },
+        "setpoint": {
+          "name": "Power setpoint",
+          "description": "Power setpoint in watts (required)"
+        },
+        "charge_setpoint": {
+          "name": "Max charge power",
+          "description": "Optional maximum charge power in watts"
+        },
+        "discharge_setpoint": {
+          "name": "Max discharge power",
+          "description": "Optional maximum discharge power in watts"
+        },
+        "min_soc": {
+          "name": "Minimum SOC",
+          "description": "Optional minimum state of charge (%)"
+        },
+        "max_soc": {
+          "name": "Maximum SOC",
+          "description": "Optional maximum state of charge (%)"
+        }
+      }
+    },
+    "set_solar_charge": {
+      "name": "Set battery to solar charge",
+      "description": "Set the Homevolt battery to solar charge mode (charge from solar production only). Requires local mode to be enabled.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to set to solar charge"
+        },
+        "setpoint": {
+          "name": "Power setpoint",
+          "description": "Optional power setpoint in watts"
+        },
+        "min_soc": {
+          "name": "Minimum SOC",
+          "description": "Optional minimum state of charge (%)"
+        },
+        "max_soc": {
+          "name": "Maximum SOC",
+          "description": "Optional maximum state of charge (%)"
+        }
+      }
+    },
+    "set_solar_charge_discharge": {
+      "name": "Set battery to solar charge/discharge",
+      "description": "Set the Homevolt battery to solar charge/discharge mode (solar-based grid management). Requires local mode to be enabled.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to set to solar charge/discharge"
+        },
+        "setpoint": {
+          "name": "Power setpoint",
+          "description": "Optional power setpoint in watts"
+        },
+        "charge_setpoint": {
+          "name": "Max charge power",
+          "description": "Optional maximum charge power in watts"
+        },
+        "discharge_setpoint": {
+          "name": "Max discharge power",
+          "description": "Optional maximum discharge power in watts"
+        },
+        "min_soc": {
+          "name": "Minimum SOC",
+          "description": "Optional minimum state of charge (%)"
+        },
+        "max_soc": {
+          "name": "Maximum SOC",
+          "description": "Optional maximum state of charge (%)"
+        }
+      }
+    },
+    "set_full_solar_export": {
+      "name": "Set battery to full solar export",
+      "description": "Set the Homevolt battery to full solar export mode (export all solar production). Requires local mode to be enabled.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to set to full solar export"
+        },
+        "setpoint": {
+          "name": "Power setpoint",
+          "description": "Optional power setpoint in watts"
+        },
+        "min_soc": {
+          "name": "Minimum SOC",
+          "description": "Optional minimum state of charge (%)"
+        },
+        "max_soc": {
+          "name": "Maximum SOC",
+          "description": "Optional maximum state of charge (%)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "clear_schedule": {
+        "name": "Clear schedule"
+      },
+      "set_idle": {
+        "name": "Set idle"
+      },
+      "set_charge": {
+        "name": "Set charge"
+      },
+      "set_discharge": {
+        "name": "Set discharge"
+      },
+      "set_solar_charge": {
+        "name": "Set solar charge"
+      },
+      "set_full_solar_export": {
+        "name": "Set full solar export"
+      }
+    },
+    "binary_sensor": {
+      "mqtt_valid": {
+        "name": "MQTT valid"
+      },
+      "wifi_connected": {
+        "name": "WiFi connected"
+      },
+      "lte_connected": {
+        "name": "LTE connected"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "name": "Battery state of charge"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "solar_power": {
+        "name": "Solar power"
+      },
+      "load_power": {
+        "name": "Load power"
+      },
+      "inverter_power": {
+        "name": "Inverter power"
+      },
+      "grid_energy_imported": {
+        "name": "Grid energy imported"
+      },
+      "grid_energy_exported": {
+        "name": "Grid energy exported"
+      },
+      "solar_energy": {
+        "name": "Solar energy"
+      },
+      "battery_energy_imported": {
+        "name": "Battery energy charged"
+      },
+      "battery_energy_exported": {
+        "name": "Battery energy discharged"
+      },
+      "inverter_energy_produced": {
+        "name": "Inverter energy produced"
+      },
+      "inverter_energy_consumed": {
+        "name": "Inverter energy consumed"
+      },
+      "ems_frequency": {
+        "name": "EMS frequency"
+      },
+      "system_temperature": {
+        "name": "System temperature"
+      },
+      "available_capacity": {
+        "name": "Available capacity"
+      },
+      "operation_state": {
+        "name": "Operation state"
+      },
+      "battery_state": {
+        "name": "Battery state"
+      },
+      "mains_voltage": {
+        "name": "Mains voltage"
+      },
+      "mains_frequency": {
+        "name": "Mains frequency"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "wifi_rssi": {
+        "name": "WiFi signal strength"
+      },
+      "lte_rssi": {
+        "name": "LTE signal strength"
+      },
+      "schedule_mode": {
+        "name": "Schedule"
+      },
+      "ems_mode": {
+        "name": "EMS mode"
+      },
+      "rated_power": {
+        "name": "Rated power"
+      },
+      "ota_version": {
+        "name": "OTA version"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "alarm_count": {
+        "name": "Alarm count"
+      },
+      "warning_count": {
+        "name": "Warning count"
+      },
+      "info_count": {
+        "name": "Info count"
+      },
+      "avail_charge_power": {
+        "name": "Available charge power"
+      },
+      "avail_discharge_power": {
+        "name": "Available discharge power"
+      },
+      "avail_charge_energy": {
+        "name": "Available charge energy"
+      },
+      "avail_discharge_energy": {
+        "name": "Available discharge energy"
+      },
+      "avail_inverter_charge_power": {
+        "name": "Available inverter charge power"
+      },
+      "avail_inverter_discharge_power": {
+        "name": "Available inverter discharge power"
+      }
+    },
+    "select": {
+      "ledstrip_mode": {
+        "name": "LED strip mode",
+        "state": {
+          "unset": "Unset",
+          "off": "Off",
+          "on": "On",
+          "soc": "State of charge",
+          "dem": "Demand",
+          "ser": "Service"
+        }
+      }
+    },
+    "switch": {
+      "settings_local": {
+        "name": "Settings local"
+      },
+      "ota_enable": {
+        "name": "OTA updates enabled"
+      },
+      "ota_enable_esp32": {
+        "name": "OTA update ESP32"
+      },
+      "ota_enable_hub_web": {
+        "name": "OTA update hub web"
+      },
+      "ota_enable_bg95_m3": {
+        "name": "OTA update BG95-M3"
+      }
+    },
+    "number": {
+      "ecu_main_fuse_size_a": {
+        "name": "Main fuse size"
+      },
+      "ecu_group_fuse_size_a": {
+        "name": "Group fuse size"
+      },
+      "ledstrip_bright_max": {
+        "name": "LED strip max brightness"
+      },
+      "ledstrip_bright_min": {
+        "name": "LED strip min brightness"
+      },
+      "ledstrip_mode_on_hue": {
+        "name": "LED strip hue"
+      },
+      "ledstrip_mode_on_saturation": {
+        "name": "LED strip saturation"
+      }
+    }
+  }
+}

@@ -1,0 +1,498 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbinden met Homevolt",
+        "description": "Voer de verbindingsgegevens in voor uw Homevolt-batterijsysteem.",
+        "data": {
+          "host": "Host",
+          "username": "Gebruikersnaam (optioneel)",
+          "password": "Wachtwoord (optioneel)"
+        },
+        "data_description": {
+          "host": "IP-adres of hostnaam (bijv. homevolt-12345.local of 192.168.1.100)",
+          "username": "Alleen vereist als authenticatie is ingeschakeld",
+          "password": "Alleen vereist als authenticatie is ingeschakeld"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Homevolt opnieuw authenticeren",
+        "description": "Voer nieuwe inloggegevens in voor {host}.",
+        "data": {
+          "username": "Gebruikersnaam (optioneel)",
+          "password": "Wachtwoord (optioneel)"
+        },
+        "data_description": {
+          "username": "Alleen vereist als authenticatie is ingeschakeld",
+          "password": "Alleen vereist als authenticatie is ingeschakeld"
+        }
+      },
+      "reconfigure": {
+        "title": "Homevolt herconfigureren",
+        "description": "Werk de verbindingsgegevens bij voor uw Homevolt-batterijsysteem.",
+        "data": {
+          "host": "Host",
+          "username": "Gebruikersnaam (optioneel)",
+          "password": "Wachtwoord (optioneel)"
+        },
+        "data_description": {
+          "host": "IP-adres of hostnaam (bijv. homevolt-12345.local of 192.168.1.100)",
+          "username": "Alleen vereist als authenticatie is ingeschakeld",
+          "password": "Alleen vereist als authenticatie is ingeschakeld"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Homevolt-apparaat ontdekt",
+        "description": "Een Homevolt-apparaat is ontdekt op {host}. Voer inloggegevens in als authenticatie is ingeschakeld.",
+        "data": {
+          "username": "Gebruikersnaam (optioneel)",
+          "password": "Wachtwoord (optioneel)"
+        },
+        "data_description": {
+          "username": "Alleen vereist als authenticatie is ingeschakeld",
+          "password": "Alleen vereist als authenticatie is ingeschakeld"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met het Homevolt-apparaat",
+      "invalid_auth": "Ongeldige gebruikersnaam of wachtwoord",
+      "rate_limited": "Te veel mislukte inlogpogingen. Wacht 5 minuten en probeer opnieuw",
+      "unknown": "Onverwachte fout opgetreden"
+    },
+    "abort": {
+      "already_configured": "Dit apparaat is al geconfigureerd",
+      "reauth_successful": "Herauthenticatie geslaagd",
+      "reconfigure_successful": "Herconfiguratie geslaagd",
+      "different_device": "Het apparaat op dit adres verschilt van het oorspronkelijke apparaat"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Kan geen verbinding maken met {host}"
+    },
+    "invalid_auth": {
+      "message": "Ongeldige inloggegevens voor {host}"
+    },
+    "rate_limited": {
+      "message": "Snelheidsbeperking door te veel mislukte authenticatiepogingen. Wacht 5 minuten."
+    },
+    "not_local_mode": {
+      "message": "Kan schema niet instellen: apparaat is niet in lokale modus. Schakel eerst 'Lokale instellingen' in om externe overschrijvingen van Tibber te voorkomen."
+    }
+  },
+  "services": {
+    "clear_schedule": {
+      "name": "Schema wissen",
+      "description": "Alle geplande laadschema's op het Homevolt-apparaat wissen",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat waarvan het schema gewist moet worden"
+        }
+      }
+    },
+    "set_idle": {
+      "name": "Batterij op inactief zetten",
+      "description": "Zet de Homevolt-batterij in inactieve modus (geen laden/ontladen). Vereist lokale modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat dat op inactief gezet moet worden"
+        },
+        "offline": {
+          "name": "Offline",
+          "description": "Zet omvormer offline in inactieve modus"
+        }
+      }
+    },
+    "set_charge": {
+      "name": "Batterij op laden zetten",
+      "description": "Zet de Homevolt-batterij in laadmodus (omvormer laden van net/zon). Vereist lokale modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat dat op laden gezet moet worden"
+        },
+        "setpoint": {
+          "name": "Vermogensinstelpunt",
+          "description": "Optioneel vermogensinstelpunt in watt"
+        },
+        "min_soc": {
+          "name": "Minimum laadniveau",
+          "description": "Optioneel minimum laadniveau (%)"
+        },
+        "max_soc": {
+          "name": "Maximum laadniveau",
+          "description": "Optioneel maximum laadniveau (%)"
+        }
+      }
+    },
+    "set_discharge": {
+      "name": "Batterij op ontladen zetten",
+      "description": "Zet de Homevolt-batterij in ontlaadmodus (omvormer ontladen naar huis/net). Vereist lokale modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat dat op ontladen gezet moet worden"
+        },
+        "setpoint": {
+          "name": "Vermogensinstelpunt",
+          "description": "Optioneel vermogensinstelpunt in watt"
+        },
+        "min_soc": {
+          "name": "Minimum laadniveau",
+          "description": "Optioneel minimum laadniveau (%)"
+        },
+        "max_soc": {
+          "name": "Maximum laadniveau",
+          "description": "Optioneel maximum laadniveau (%)"
+        }
+      }
+    },
+    "set_grid_charge": {
+      "name": "Batterij op netladen zetten",
+      "description": "Zet de Homevolt-batterij in netlaadmodus (geforceerd laden van net). Vereist lokale modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat dat op netladen gezet moet worden"
+        },
+        "setpoint": {
+          "name": "Vermogensinstelpunt",
+          "description": "Optioneel vermogensinstelpunt in watt"
+        },
+        "min_soc": {
+          "name": "Minimum laadniveau",
+          "description": "Optioneel minimum laadniveau (%)"
+        },
+        "max_soc": {
+          "name": "Maximum laadniveau",
+          "description": "Optioneel maximum laadniveau (%)"
+        }
+      }
+    },
+    "set_grid_discharge": {
+      "name": "Batterij op netontladen zetten",
+      "description": "Zet de Homevolt-batterij in netontlaadmodus (geforceerd ontladen naar net). Vereist lokale modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat dat op netontladen gezet moet worden"
+        },
+        "setpoint": {
+          "name": "Vermogensinstelpunt",
+          "description": "Optioneel vermogensinstelpunt in watt"
+        },
+        "min_soc": {
+          "name": "Minimum laadniveau",
+          "description": "Optioneel minimum laadniveau (%)"
+        },
+        "max_soc": {
+          "name": "Maximum laadniveau",
+          "description": "Optioneel maximum laadniveau (%)"
+        }
+      }
+    },
+    "set_grid_charge_discharge": {
+      "name": "Batterij op net laden/ontladen zetten",
+      "description": "Zet de Homevolt-batterij in bidirectionele netmodus (staat zowel laden van als ontladen naar net toe). Vereist lokale modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat dat op net laden/ontladen gezet moet worden"
+        },
+        "setpoint": {
+          "name": "Vermogensinstelpunt",
+          "description": "Vermogensinstelpunt in watt (vereist)"
+        },
+        "charge_setpoint": {
+          "name": "Max laadvermogen",
+          "description": "Optioneel maximum laadvermogen in watt"
+        },
+        "discharge_setpoint": {
+          "name": "Max ontlaadvermogen",
+          "description": "Optioneel maximum ontlaadvermogen in watt"
+        },
+        "min_soc": {
+          "name": "Minimum laadniveau",
+          "description": "Optioneel minimum laadniveau (%)"
+        },
+        "max_soc": {
+          "name": "Maximum laadniveau",
+          "description": "Optioneel maximum laadniveau (%)"
+        }
+      }
+    },
+    "set_solar_charge": {
+      "name": "Batterij op zonneladen zetten",
+      "description": "Zet de Homevolt-batterij in zonnelaadmodus (alleen laden van zonneproductie). Vereist lokale modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat dat op zonneladen gezet moet worden"
+        },
+        "setpoint": {
+          "name": "Vermogensinstelpunt",
+          "description": "Optioneel vermogensinstelpunt in watt"
+        },
+        "min_soc": {
+          "name": "Minimum laadniveau",
+          "description": "Optioneel minimum laadniveau (%)"
+        },
+        "max_soc": {
+          "name": "Maximum laadniveau",
+          "description": "Optioneel maximum laadniveau (%)"
+        }
+      }
+    },
+    "set_solar_charge_discharge": {
+      "name": "Batterij op zonne laden/ontladen zetten",
+      "description": "Zet de Homevolt-batterij in zonne laden/ontladen modus (zongebaseerd netbeheer). Vereist lokale modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat dat op zonne laden/ontladen gezet moet worden"
+        },
+        "setpoint": {
+          "name": "Vermogensinstelpunt",
+          "description": "Optioneel vermogensinstelpunt in watt"
+        },
+        "charge_setpoint": {
+          "name": "Max laadvermogen",
+          "description": "Optioneel maximum laadvermogen in watt"
+        },
+        "discharge_setpoint": {
+          "name": "Max ontlaadvermogen",
+          "description": "Optioneel maximum ontlaadvermogen in watt"
+        },
+        "min_soc": {
+          "name": "Minimum laadniveau",
+          "description": "Optioneel minimum laadniveau (%)"
+        },
+        "max_soc": {
+          "name": "Maximum laadniveau",
+          "description": "Optioneel maximum laadniveau (%)"
+        }
+      }
+    },
+    "set_full_solar_export": {
+      "name": "Batterij op volledige zonne-export zetten",
+      "description": "Zet de Homevolt-batterij in volledige zonne-exportmodus (exporteer alle zonneproductie). Vereist lokale modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat dat op volledige zonne-export gezet moet worden"
+        },
+        "setpoint": {
+          "name": "Vermogensinstelpunt",
+          "description": "Optioneel vermogensinstelpunt in watt"
+        },
+        "min_soc": {
+          "name": "Minimum laadniveau",
+          "description": "Optioneel minimum laadniveau (%)"
+        },
+        "max_soc": {
+          "name": "Maximum laadniveau",
+          "description": "Optioneel maximum laadniveau (%)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "clear_schedule": {
+        "name": "Schema wissen"
+      },
+      "set_idle": {
+        "name": "Op inactief zetten"
+      },
+      "set_charge": {
+        "name": "Op laden zetten"
+      },
+      "set_discharge": {
+        "name": "Op ontladen zetten"
+      },
+      "set_solar_charge": {
+        "name": "Op zonneladen zetten"
+      },
+      "set_full_solar_export": {
+        "name": "Op volledige zonne-export zetten"
+      }
+    },
+    "binary_sensor": {
+      "mqtt_valid": {
+        "name": "MQTT geldig"
+      },
+      "wifi_connected": {
+        "name": "WiFi verbonden"
+      },
+      "lte_connected": {
+        "name": "LTE verbonden"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "name": "Batterijlaadniveau"
+      },
+      "battery_power": {
+        "name": "Batterijvermogen"
+      },
+      "grid_power": {
+        "name": "Netvermogen"
+      },
+      "solar_power": {
+        "name": "Zonne-energie vermogen"
+      },
+      "load_power": {
+        "name": "Belastingvermogen"
+      },
+      "inverter_power": {
+        "name": "Omvormervermogen"
+      },
+      "grid_energy_imported": {
+        "name": "Geïmporteerde netenergie"
+      },
+      "grid_energy_exported": {
+        "name": "Geëxporteerde netenergie"
+      },
+      "solar_energy": {
+        "name": "Zonne-energie"
+      },
+      "battery_energy_imported": {
+        "name": "Batterij opgeladen energie"
+      },
+      "battery_energy_exported": {
+        "name": "Batterij ontladen energie"
+      },
+      "inverter_energy_produced": {
+        "name": "Omvormer geproduceerde energie"
+      },
+      "inverter_energy_consumed": {
+        "name": "Omvormer verbruikte energie"
+      },
+      "ems_frequency": {
+        "name": "EMS-frequentie"
+      },
+      "system_temperature": {
+        "name": "Systeemtemperatuur"
+      },
+      "available_capacity": {
+        "name": "Beschikbare capaciteit"
+      },
+      "operation_state": {
+        "name": "Bedrijfsstatus"
+      },
+      "battery_state": {
+        "name": "Batterijstatus"
+      },
+      "mains_voltage": {
+        "name": "Netspanning"
+      },
+      "mains_frequency": {
+        "name": "Netfrequentie"
+      },
+      "uptime": {
+        "name": "Bedrijfstijd"
+      },
+      "wifi_rssi": {
+        "name": "WiFi-signaalsterkte"
+      },
+      "lte_rssi": {
+        "name": "LTE-signaalsterkte"
+      },
+      "schedule_mode": {
+        "name": "Schema"
+      },
+      "ems_mode": {
+        "name": "EMS-modus"
+      },
+      "rated_power": {
+        "name": "Nominaal vermogen"
+      },
+      "ota_version": {
+        "name": "OTA-versie"
+      },
+      "firmware_version": {
+        "name": "Firmwareversie"
+      },
+      "alarm_count": {
+        "name": "Aantal alarmen"
+      },
+      "warning_count": {
+        "name": "Aantal waarschuwingen"
+      },
+      "info_count": {
+        "name": "Aantal infomeldingen"
+      },
+      "avail_charge_power": {
+        "name": "Beschikbaar laadvermogen"
+      },
+      "avail_discharge_power": {
+        "name": "Beschikbaar ontlaadvermogen"
+      },
+      "avail_charge_energy": {
+        "name": "Beschikbare laadenergie"
+      },
+      "avail_discharge_energy": {
+        "name": "Beschikbare ontlaadenergie"
+      },
+      "avail_inverter_charge_power": {
+        "name": "Beschikbaar omvormer-laadvermogen"
+      },
+      "avail_inverter_discharge_power": {
+        "name": "Beschikbaar omvormer-ontlaadvermogen"
+      }
+    },
+    "select": {
+      "ledstrip_mode": {
+        "name": "LED-strip modus",
+        "state": {
+          "unset": "Niet ingesteld",
+          "off": "Uit",
+          "on": "Aan",
+          "soc": "Laadniveau",
+          "dem": "Vraag",
+          "ser": "Service"
+        }
+      }
+    },
+    "switch": {
+      "settings_local": {
+        "name": "Lokale instellingen"
+      },
+      "ota_enable": {
+        "name": "OTA-updates ingeschakeld"
+      },
+      "ota_enable_esp32": {
+        "name": "OTA-update ESP32"
+      },
+      "ota_enable_hub_web": {
+        "name": "OTA-update hub web"
+      },
+      "ota_enable_bg95_m3": {
+        "name": "OTA-update BG95-M3"
+      }
+    },
+    "number": {
+      "ecu_main_fuse_size_a": {
+        "name": "Hoofdzekeringgrootte"
+      },
+      "ecu_group_fuse_size_a": {
+        "name": "Groepzekeringgrootte"
+      },
+      "ledstrip_bright_max": {
+        "name": "LED-strip max helderheid"
+      },
+      "ledstrip_bright_min": {
+        "name": "LED-strip min helderheid"
+      },
+      "ledstrip_mode_on_hue": {
+        "name": "LED-strip tint"
+      },
+      "ledstrip_mode_on_saturation": {
+        "name": "LED-strip verzadiging"
+      }
+    }
+  }
+}

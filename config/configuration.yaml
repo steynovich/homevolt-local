@@ -1,0 +1,9 @@
+# Home Assistant Test Configuration
+
+default_config:
+
+# Enable debug logging for the integration
+logger:
+  default: info
+  logs:
+    custom_components.homevolt_local: debug
