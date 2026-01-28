@@ -132,6 +132,33 @@ def _list_length_or_none(value: Any) -> int | None:
     return None
 
 
+def _get_battery_icon(soc: float | None) -> str:
+    """Return the appropriate battery icon based on state of charge."""
+    if soc is None:
+        return "mdi:battery-unknown"
+    if soc >= 95:
+        return "mdi:battery"
+    if soc >= 85:
+        return "mdi:battery-90"
+    if soc >= 75:
+        return "mdi:battery-80"
+    if soc >= 65:
+        return "mdi:battery-70"
+    if soc >= 55:
+        return "mdi:battery-60"
+    if soc >= 45:
+        return "mdi:battery-50"
+    if soc >= 35:
+        return "mdi:battery-40"
+    if soc >= 25:
+        return "mdi:battery-30"
+    if soc >= 15:
+        return "mdi:battery-20"
+    if soc >= 5:
+        return "mdi:battery-10"
+    return "mdi:battery-outline"
+
+
 def _deci_to_unit(value: float | int | None) -> float | None:
     """Convert deci-unit (e.g., deci-degrees) to unit (e.g., degrees)."""
     if value is None:
@@ -802,6 +829,13 @@ class HomevoltSensor(CoordinatorEntity[HomevoltCoordinator], SensorEntity):
     def native_value(self) -> Any:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._get_data())
+
+    @property
+    def icon(self) -> str | None:
+        """Return dynamic icon based on sensor state."""
+        if self.entity_description.key == "battery_soc":
+            return _get_battery_icon(self.native_value)
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

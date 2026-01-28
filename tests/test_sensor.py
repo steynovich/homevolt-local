@@ -25,6 +25,7 @@ from custom_components.homevolt_local.sensor import (
     STATUS_SENSORS,
     _deci_to_unit,
     _get_aggregated_ems_info,
+    _get_battery_icon,
     _get_ems_data,
     _get_ems_prediction,
     _get_first_bms,
@@ -67,6 +68,74 @@ class TestUnitConversions:
     def test_milli_to_unit_none(self) -> None:
         """Test milli to unit conversion with None."""
         assert _milli_to_unit(None) is None
+
+
+class TestGetBatteryIcon:
+    """Test battery icon helper function."""
+
+    def test_battery_icon_none(self) -> None:
+        """Test battery icon with None returns unknown."""
+        assert _get_battery_icon(None) == "mdi:battery-unknown"
+
+    def test_battery_icon_full(self) -> None:
+        """Test battery icon at 100%."""
+        assert _get_battery_icon(100) == "mdi:battery"
+
+    def test_battery_icon_95(self) -> None:
+        """Test battery icon at 95%."""
+        assert _get_battery_icon(95) == "mdi:battery"
+
+    def test_battery_icon_94(self) -> None:
+        """Test battery icon at 94%."""
+        assert _get_battery_icon(94) == "mdi:battery-90"
+
+    def test_battery_icon_85(self) -> None:
+        """Test battery icon at 85%."""
+        assert _get_battery_icon(85) == "mdi:battery-90"
+
+    def test_battery_icon_75(self) -> None:
+        """Test battery icon at 75%."""
+        assert _get_battery_icon(75) == "mdi:battery-80"
+
+    def test_battery_icon_65(self) -> None:
+        """Test battery icon at 65%."""
+        assert _get_battery_icon(65) == "mdi:battery-70"
+
+    def test_battery_icon_55(self) -> None:
+        """Test battery icon at 55%."""
+        assert _get_battery_icon(55) == "mdi:battery-60"
+
+    def test_battery_icon_45(self) -> None:
+        """Test battery icon at 45%."""
+        assert _get_battery_icon(45) == "mdi:battery-50"
+
+    def test_battery_icon_35(self) -> None:
+        """Test battery icon at 35%."""
+        assert _get_battery_icon(35) == "mdi:battery-40"
+
+    def test_battery_icon_25(self) -> None:
+        """Test battery icon at 25%."""
+        assert _get_battery_icon(25) == "mdi:battery-30"
+
+    def test_battery_icon_15(self) -> None:
+        """Test battery icon at 15%."""
+        assert _get_battery_icon(15) == "mdi:battery-20"
+
+    def test_battery_icon_5(self) -> None:
+        """Test battery icon at 5%."""
+        assert _get_battery_icon(5) == "mdi:battery-10"
+
+    def test_battery_icon_4(self) -> None:
+        """Test battery icon at 4%."""
+        assert _get_battery_icon(4) == "mdi:battery-outline"
+
+    def test_battery_icon_0(self) -> None:
+        """Test battery icon at 0%."""
+        assert _get_battery_icon(0) == "mdi:battery-outline"
+
+    def test_battery_icon_float(self) -> None:
+        """Test battery icon with float value."""
+        assert _get_battery_icon(45.5) == "mdi:battery-50"
 
 
 class TestDataExtractors:
