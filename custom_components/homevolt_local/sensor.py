@@ -700,10 +700,7 @@ def _has_external_sensor(coordinator: HomevoltCoordinator, sensor_type: str) -> 
     sensors = ems_data.get("sensors", [])
     if not isinstance(sensors, list):
         return False
-    return any(
-        isinstance(sensor, dict) and sensor.get("type") == sensor_type
-        for sensor in sensors
-    )
+    return any(isinstance(sensor, dict) and sensor.get("type") == sensor_type for sensor in sensors)
 
 
 async def async_setup_entry(
@@ -739,9 +736,11 @@ async def async_setup_entry(
 
     for description in ALL_SENSORS:
         # Skip external sensors that aren't available on this device
-        if description.key in external_sensor_availability:
-            if not external_sensor_availability[description.key]:
-                continue
+        if (
+            description.key in external_sensor_availability
+            and not external_sensor_availability[description.key]
+        ):
+            continue
 
         # ECU device gets all available sensors with individual data
         entities.append(HomevoltSensor(coordinator, description, DeviceType.ECU))
