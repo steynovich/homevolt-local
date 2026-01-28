@@ -16,6 +16,7 @@ from custom_components.homevolt_local.sensor import (
     CLUSTER_ONLY_SENSORS,
     EMS_MODE_SENSORS,
     EMS_SENSORS,
+    EXTERNAL_SENSOR_SENSORS,
     MAINS_SENSORS,
     OTA_SENSORS,
     PARALLEL_UPDATES,
@@ -30,6 +31,7 @@ from custom_components.homevolt_local.sensor import (
     _get_first_ems,
     _get_first_ems_info,
     _get_param_string,
+    _get_sensor_by_type,
     _milli_to_unit,
     _transform_schedule_entries,
 )
@@ -210,6 +212,7 @@ class TestSensorDescriptions:
             + len(SCHEDULE_SENSORS)
             + len(EMS_MODE_SENSORS)
             + len(OTA_SENSORS)
+            + len(EXTERNAL_SENSOR_SENSORS)
         )
         assert len(ALL_SENSORS) == expected
 
@@ -354,9 +357,9 @@ class TestSensorValueFunctions:
         result = sensor.value_fn(data)
         assert result is None
 
-    def test_alarm_count(self) -> None:
-        """Test alarm count is length of alarm_str list."""
-        sensor = next(s for s in EMS_SENSORS if s.key == "alarm_count")
+    def test_alarm_messages(self) -> None:
+        """Test alarm messages is length of alarm_str list."""
+        sensor = next(s for s in EMS_SENSORS if s.key == "alarm_messages")
         data = {
             "ems": [
                 {
@@ -372,9 +375,9 @@ class TestSensorValueFunctions:
         attrs = sensor.attributes_fn(data)
         assert attrs == {"messages": ["Battery overtemp", "Grid fault"]}
 
-    def test_alarm_count_not_list(self) -> None:
-        """Test alarm count returns None when alarm_str is not a list."""
-        sensor = next(s for s in EMS_SENSORS if s.key == "alarm_count")
+    def test_alarm_messages_not_list(self) -> None:
+        """Test alarm messages returns None when alarm_str is not a list."""
+        sensor = next(s for s in EMS_SENSORS if s.key == "alarm_messages")
         data = {
             "ems": [
                 {
@@ -388,9 +391,9 @@ class TestSensorValueFunctions:
         result = sensor.value_fn(data)
         assert result is None
 
-    def test_alarm_count_empty(self) -> None:
-        """Test alarm count when no alarms present."""
-        sensor = next(s for s in EMS_SENSORS if s.key == "alarm_count")
+    def test_alarm_messages_empty(self) -> None:
+        """Test alarm messages when no alarms present."""
+        sensor = next(s for s in EMS_SENSORS if s.key == "alarm_messages")
         data = {
             "ems": [
                 {
@@ -404,9 +407,9 @@ class TestSensorValueFunctions:
         result = sensor.value_fn(data)
         assert result == 0
 
-    def test_warning_count(self) -> None:
-        """Test warning count is length of warning_str list."""
-        sensor = next(s for s in EMS_SENSORS if s.key == "warning_count")
+    def test_warning_messages(self) -> None:
+        """Test warning messages is length of warning_str list."""
+        sensor = next(s for s in EMS_SENSORS if s.key == "warning_messages")
         data = {
             "ems": [
                 {
@@ -422,9 +425,9 @@ class TestSensorValueFunctions:
         attrs = sensor.attributes_fn(data)
         assert attrs == {"messages": ["Low battery"]}
 
-    def test_info_count(self) -> None:
-        """Test info count is length of info_str list."""
-        sensor = next(s for s in EMS_SENSORS if s.key == "info_count")
+    def test_info_messages(self) -> None:
+        """Test info messages is length of info_str list."""
+        sensor = next(s for s in EMS_SENSORS if s.key == "info_messages")
         data = {
             "ems": [
                 {
@@ -694,9 +697,14 @@ class TestClusterOnlySensors:
     """Test cluster-only sensor value extraction functions."""
 
     def test_rated_power_extraction(self, mock_ems_data: dict) -> None:
-        """Test rated power extraction from aggregated.ems_info."""
+        """Test rated power extraction from aggregated.ems_info.
+
+        Note: _get_data() wraps aggregated into ems[0], so we simulate that here.
+        """
         sensor = next(s for s in CLUSTER_ONLY_SENSORS if s.key == "rated_power")
-        result = sensor.value_fn(mock_ems_data)
+        # Simulate what _get_data() does for CLUSTER sensors
+        transformed_data = {"ems": [mock_ems_data["aggregated"]]}
+        result = sensor.value_fn(transformed_data)
         assert result == 5000
 
     def test_rated_power_missing(self) -> None:
@@ -1036,3 +1044,302 @@ class TestEmsPredictionSensors:
         data = {**mock_ems_data, "ems": [aggregated]}
         result = sensor.value_fn(data)
         assert result == 16000  # From aggregated, not ems[0]
+
+
+class TestGetSensorByType:
+    """Test _get_sensor_by_type helper function."""
+
+    def test_get_grid_sensor(self) -> None:
+        """Test extracting grid sensor from sensors array."""
+        data = {
+            "sensors": [
+                {"type": "grid", "total_power": 1500, "rssi": -45},
+                {"type": "solar", "total_power": 2000, "rssi": -50},
+            ]
+        }
+        result = _get_sensor_by_type(data, "grid")
+        assert result == {"type": "grid", "total_power": 1500, "rssi": -45}
+
+    def test_get_solar_sensor(self) -> None:
+        """Test extracting solar sensor from sensors array."""
+        data = {
+            "sensors": [
+                {"type": "grid", "total_power": 1500},
+                {"type": "solar", "total_power": 2000},
+            ]
+        }
+        result = _get_sensor_by_type(data, "solar")
+        assert result == {"type": "solar", "total_power": 2000}
+
+    def test_get_load_sensor(self) -> None:
+        """Test extracting load sensor from sensors array."""
+        data = {
+            "sensors": [
+                {"type": "grid", "total_power": 1500},
+                {"type": "load", "total_power": 800},
+            ]
+        }
+        result = _get_sensor_by_type(data, "load")
+        assert result == {"type": "load", "total_power": 800}
+
+    def test_sensor_type_not_found(self) -> None:
+        """Test returns empty dict when sensor type not in array."""
+        data = {
+            "sensors": [
+                {"type": "grid", "total_power": 1500},
+            ]
+        }
+        result = _get_sensor_by_type(data, "solar")
+        assert result == {}
+
+    def test_empty_sensors_array(self) -> None:
+        """Test returns empty dict when sensors array is empty."""
+        data = {"sensors": []}
+        result = _get_sensor_by_type(data, "grid")
+        assert result == {}
+
+    def test_missing_sensors_key(self) -> None:
+        """Test returns empty dict when sensors key is missing."""
+        data = {"ems": []}
+        result = _get_sensor_by_type(data, "grid")
+        assert result == {}
+
+    def test_missing_data(self) -> None:
+        """Test returns empty dict when data is empty."""
+        data: dict = {}
+        result = _get_sensor_by_type(data, "grid")
+        assert result == {}
+
+    def test_sensors_not_list(self) -> None:
+        """Test returns empty dict when sensors is not a list."""
+        data = {"sensors": "not_a_list"}
+        result = _get_sensor_by_type(data, "grid")
+        assert result == {}
+
+    def test_sensor_item_not_dict(self) -> None:
+        """Test skips non-dict items in sensors array."""
+        data = {"sensors": ["not_a_dict", {"type": "grid", "total_power": 1500}]}
+        result = _get_sensor_by_type(data, "grid")
+        assert result == {"type": "grid", "total_power": 1500}
+
+
+class TestExternalSensorSensors:
+    """Test external sensor (grid, solar, load) value extraction functions."""
+
+    @pytest.fixture
+    def mock_ems_with_sensors(self) -> dict:
+        """Return mock EMS data with sensors array at top level."""
+        return {
+            "sensors": [
+                {
+                    "type": "grid",
+                    "total_power": 1500,
+                    "energy_imported": 100.5,
+                    "energy_exported": 50.25,
+                    "rssi": -45,
+                    "pdr": 95,
+                    "available": True,
+                },
+                {
+                    "type": "solar",
+                    "total_power": 2000,
+                    "energy_imported": 500.75,
+                    "energy_exported": 0.0,
+                    "rssi": -50,
+                    "pdr": 98,
+                    "available": True,
+                },
+                {
+                    "type": "load",
+                    "total_power": 800,
+                    "energy_imported": 200.0,
+                    "energy_exported": 10.0,
+                    "rssi": -55,
+                    "pdr": 90,
+                    "available": True,
+                },
+            ]
+        }
+
+    def test_grid_power_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test grid power extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "grid_power")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == 1500
+
+    def test_grid_energy_imported_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test grid energy imported extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "grid_energy_imported")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == 100.5
+
+    def test_grid_energy_exported_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test grid energy exported extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "grid_energy_exported")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == 50.25
+
+    def test_grid_rssi_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test grid rssi extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "grid_rssi")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == -45
+
+    def test_solar_power_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test solar power extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "solar_power")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == 2000
+
+    def test_solar_energy_imported_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test solar energy imported extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "solar_energy_imported")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == 500.75
+
+    def test_solar_energy_exported_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test solar energy exported extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "solar_energy_exported")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == 0.0
+
+    def test_solar_rssi_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test solar rssi extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "solar_rssi")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == -50
+
+    def test_load_power_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test load power extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "load_power")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == 800
+
+    def test_load_energy_imported_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test load energy imported extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "load_energy_imported")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == 200.0
+
+    def test_load_energy_exported_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test load energy exported extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "load_energy_exported")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == 10.0
+
+    def test_load_rssi_extraction(self, mock_ems_with_sensors: dict) -> None:
+        """Test load rssi extraction."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "load_rssi")
+        result = sensor.value_fn(mock_ems_with_sensors)
+        assert result == -55
+
+    def test_grid_power_missing_sensor(self) -> None:
+        """Test grid power returns None when grid sensor not present."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "grid_power")
+        data = {"sensors": [{"function_name": "solar", "total_power": 2000}]}
+        result = sensor.value_fn(data)
+        assert result is None
+
+    def test_solar_power_missing_sensor(self) -> None:
+        """Test solar power returns None when solar sensor not present."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "solar_power")
+        data = {"sensors": [{"function_name": "grid", "total_power": 1500}]}
+        result = sensor.value_fn(data)
+        assert result is None
+
+    def test_load_power_missing_sensor(self) -> None:
+        """Test load power returns None when load sensor not present."""
+        sensor = next(s for s in EXTERNAL_SENSOR_SENSORS if s.key == "load_power")
+        data = {"sensors": [{"function_name": "grid", "total_power": 1500}]}
+        result = sensor.value_fn(data)
+        assert result is None
+
+    def test_external_sensor_sensors_are_ecu_type(self) -> None:
+        """Test all external sensor sensors have ECU device type."""
+        for sensor in EXTERNAL_SENSOR_SENSORS:
+            assert sensor.device_type == DeviceType.ECU, f"{sensor.key} should be ECU"
+
+    def test_external_sensor_sensors_have_translation_keys(self) -> None:
+        """Test all external sensor sensors have translation_key set."""
+        for sensor in EXTERNAL_SENSOR_SENSORS:
+            assert sensor.translation_key is not None
+            assert sensor.translation_key == sensor.key
+
+    def test_power_sensors_have_correct_units(self) -> None:
+        """Test power sensors have correct unit and device class."""
+        power_sensor_keys = {"grid_power", "solar_power", "load_power"}
+        for sensor in EXTERNAL_SENSOR_SENSORS:
+            if sensor.key in power_sensor_keys:
+                assert (
+                    sensor.native_unit_of_measurement == UnitOfPower.WATT
+                ), f"{sensor.key} should have WATT unit"
+                assert (
+                    sensor.device_class == SensorDeviceClass.POWER
+                ), f"{sensor.key} should have POWER device class"
+                assert (
+                    sensor.state_class == SensorStateClass.MEASUREMENT
+                ), f"{sensor.key} should have MEASUREMENT state class"
+
+    def test_energy_sensors_have_correct_units(self) -> None:
+        """Test energy sensors have correct unit and device class."""
+        from homeassistant.const import UnitOfEnergy
+
+        energy_sensor_keys = {
+            "grid_energy_imported",
+            "grid_energy_exported",
+            "solar_energy_imported",
+            "solar_energy_exported",
+            "load_energy_imported",
+            "load_energy_exported",
+        }
+        for sensor in EXTERNAL_SENSOR_SENSORS:
+            if sensor.key in energy_sensor_keys:
+                assert (
+                    sensor.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
+                ), f"{sensor.key} should have KILO_WATT_HOUR unit"
+                assert (
+                    sensor.device_class == SensorDeviceClass.ENERGY
+                ), f"{sensor.key} should have ENERGY device class"
+                assert (
+                    sensor.state_class == SensorStateClass.TOTAL_INCREASING
+                ), f"{sensor.key} should have TOTAL_INCREASING state class"
+
+    def test_rssi_sensors_have_correct_units(self) -> None:
+        """Test RSSI sensors have correct unit and device class."""
+        from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+
+        rssi_sensor_keys = {"grid_rssi", "solar_rssi", "load_rssi"}
+        for sensor in EXTERNAL_SENSOR_SENSORS:
+            if sensor.key in rssi_sensor_keys:
+                assert (
+                    sensor.native_unit_of_measurement == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+                ), f"{sensor.key} should have dBm unit"
+                assert (
+                    sensor.device_class == SensorDeviceClass.SIGNAL_STRENGTH
+                ), f"{sensor.key} should have SIGNAL_STRENGTH device class"
+                assert (
+                    sensor.entity_category == EntityCategory.DIAGNOSTIC
+                ), f"{sensor.key} should be DIAGNOSTIC category"
+                # grid_rssi and solar_rssi are enabled by default, load_rssi is disabled
+                if sensor.key == "load_rssi":
+                    assert (
+                        sensor.entity_registry_enabled_default is False
+                    ), f"{sensor.key} should be disabled by default"
+                else:
+                    # grid_rssi and solar_rssi don't have entity_registry_enabled_default set (defaults to True)
+                    assert (
+                        sensor.entity_registry_enabled_default is not False
+                    ), f"{sensor.key} should be enabled by default"
+
+    def test_all_sensors_includes_external_sensors(self) -> None:
+        """Test ALL_SENSORS includes EXTERNAL_SENSOR_SENSORS."""
+        expected = (
+            len(EMS_SENSORS)
+            + len(MAINS_SENSORS)
+            + len(STATUS_SENSORS)
+            + len(SCHEDULE_SENSORS)
+            + len(EMS_MODE_SENSORS)
+            + len(OTA_SENSORS)
+            + len(EXTERNAL_SENSOR_SENSORS)
+        )
+        assert len(ALL_SENSORS) == expected

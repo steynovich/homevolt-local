@@ -347,6 +347,15 @@
       "load_power": {
         "name": "Load power"
       },
+      "load_energy_imported": {
+        "name": "Load energy consumed"
+      },
+      "load_energy_exported": {
+        "name": "Load energy exported"
+      },
+      "load_rssi": {
+        "name": "Load sensor signal strength"
+      },
       "inverter_power": {
         "name": "Inverter power"
       },
@@ -356,8 +365,17 @@
       "grid_energy_exported": {
         "name": "Grid energy exported"
       },
-      "solar_energy": {
-        "name": "Solar energy"
+      "grid_rssi": {
+        "name": "Grid sensor signal strength"
+      },
+      "solar_energy_imported": {
+        "name": "Solar energy produced"
+      },
+      "solar_energy_exported": {
+        "name": "Solar energy exported"
+      },
+      "solar_rssi": {
+        "name": "Solar sensor signal strength"
       },
       "battery_energy_imported": {
         "name": "Battery energy charged"
@@ -416,14 +434,14 @@
       "firmware_version": {
         "name": "Firmware version"
       },
-      "alarm_count": {
-        "name": "Alarm count"
+      "alarm_messages": {
+        "name": "Alarm messages"
       },
-      "warning_count": {
-        "name": "Warning count"
+      "warning_messages": {
+        "name": "Warning messages"
       },
-      "info_count": {
-        "name": "Info count"
+      "info_messages": {
+        "name": "Info messages"
       },
       "avail_charge_power": {
         "name": "Available charge power"

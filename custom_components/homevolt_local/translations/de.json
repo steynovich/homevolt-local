@@ -347,6 +347,15 @@
       "load_power": {
         "name": "Verbrauchsleistung"
       },
+      "load_energy_imported": {
+        "name": "Verbrauchte Energie"
+      },
+      "load_energy_exported": {
+        "name": "Exportierte Verbrauchsenergie"
+      },
+      "load_rssi": {
+        "name": "Verbrauchssensor-Signalstärke"
+      },
       "inverter_power": {
         "name": "Wechselrichterleistung"
       },
@@ -356,8 +365,17 @@
       "grid_energy_exported": {
         "name": "Exportierte netzenergie"
       },
-      "solar_energy": {
-        "name": "Solarenergie"
+      "grid_rssi": {
+        "name": "Netzsensor-Signalstärke"
+      },
+      "solar_energy_imported": {
+        "name": "Solarenergie produziert"
+      },
+      "solar_energy_exported": {
+        "name": "Solarenergie exportiert"
+      },
+      "solar_rssi": {
+        "name": "Solarsensor-Signalstärke"
       },
       "battery_energy_imported": {
         "name": "Batterieladeenergie"
@@ -416,14 +434,14 @@
       "firmware_version": {
         "name": "Firmware-Version"
       },
-      "alarm_count": {
-        "name": "Alarmanzahl"
+      "alarm_messages": {
+        "name": "Alarmmeldungen"
       },
-      "warning_count": {
-        "name": "Warnungsanzahl"
+      "warning_messages": {
+        "name": "Warnmeldungen"
       },
-      "info_count": {
-        "name": "Infoanzahl"
+      "info_messages": {
+        "name": "Infomeldungen"
       },
       "avail_charge_power": {
         "name": "Verfügbare Ladeleistung"

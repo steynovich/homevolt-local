@@ -77,6 +77,42 @@
       },
       "firmware_version": {
         "default": "mdi:chip"
+      },
+      "grid_power": {
+        "default": "mdi:transmission-tower"
+      },
+      "grid_energy_imported": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "grid_energy_exported": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "grid_rssi": {
+        "default": "mdi:signal"
+      },
+      "solar_power": {
+        "default": "mdi:solar-power"
+      },
+      "solar_energy_imported": {
+        "default": "mdi:solar-panel-large"
+      },
+      "solar_energy_exported": {
+        "default": "mdi:solar-panel"
+      },
+      "solar_rssi": {
+        "default": "mdi:signal"
+      },
+      "load_power": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "load_energy_imported": {
+        "default": "mdi:home-import-outline"
+      },
+      "load_energy_exported": {
+        "default": "mdi:home-export-outline"
+      },
+      "load_rssi": {
+        "default": "mdi:signal"
       }
     },
     "select": {

@@ -77,7 +77,7 @@ ha-homevolt-local/
 - **Schedule Mode**: Local/Remote with schedule attributes
 - **EMS Mode**: Leader/Follower based on number of units in cluster
 - **Firmware Version**: ECU firmware version (diagnostic)
-- **Alarm/Warning/Info Count**: Count of active alarms/warnings/info messages with messages attribute (diagnostic)
+- **Alarm/Warning/Info Messages**: Count of active alarms/warnings/info messages with messages attribute (diagnostic)
 - **Uptime**: Device uptime in days (diagnostic, disabled by default)
 - **Mains Voltage/Frequency**: Grid measurements (diagnostic, disabled by default)
 - **System Temperature**: ECU temperature
@@ -88,6 +88,10 @@ ha-homevolt-local/
   - Available Discharge Energy (`avail_di_energy`)
   - Available Inverter Charge Power (`avail_inv_ch_pwr`)
   - Available Inverter Discharge Power (`avail_inv_di_pwr`)
+- **External Sensors** (ECU-only, auto-detected from sensors array):
+  - **Grid**: Power, Energy Imported/Exported, Signal Strength (enabled by default)
+  - **Solar**: Power, Energy Imported/Exported (Energy Exported disabled), Signal Strength (enabled by default)
+  - **Load**: Power, Energy Imported/Exported, Signal Strength (disabled by default)
 
 ### Binary Sensors (Diagnostic)
 - **MQTT Valid**: MQTT connection status
@@ -113,6 +117,7 @@ ha-homevolt-local/
 - **All entities created unconditionally**: Show "unavailable" when data is missing
 - **Automatic availability**: Become available when data appears (no reload needed)
 - **Entity categories**: CONFIG for settings, DIAGNOSTIC for system info
+- **External sensor detection**: Grid/Solar/Load sensors only created on ECU devices when detected in API data
 
 ## Response Format Compatibility
 

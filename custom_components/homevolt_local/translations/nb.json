@@ -347,6 +347,15 @@
       "load_power": {
         "name": "Lasteffekt"
       },
+      "load_energy_imported": {
+        "name": "Last energi forbrukt"
+      },
+      "load_energy_exported": {
+        "name": "Last energi eksportert"
+      },
+      "load_rssi": {
+        "name": "Lastsensor-signalstyrke"
+      },
       "inverter_power": {
         "name": "Vekselretter-effekt"
       },
@@ -356,8 +365,17 @@
       "grid_energy_exported": {
         "name": "Eksportert nettenergi"
       },
-      "solar_energy": {
-        "name": "Solenergi"
+      "grid_rssi": {
+        "name": "Nettsensor-signalstyrke"
+      },
+      "solar_energy_imported": {
+        "name": "Solenergi produsert"
+      },
+      "solar_energy_exported": {
+        "name": "Solenergi eksportert"
+      },
+      "solar_rssi": {
+        "name": "Solsensor-signalstyrke"
       },
       "battery_energy_imported": {
         "name": "Batteriladeenergi"
@@ -416,14 +434,14 @@
       "firmware_version": {
         "name": "Firmware-versjon"
       },
-      "alarm_count": {
-        "name": "Antall alarmer"
+      "alarm_messages": {
+        "name": "Alarmmeldinger"
       },
-      "warning_count": {
-        "name": "Antall advarsler"
+      "warning_messages": {
+        "name": "Advarselsmeldinger"
       },
-      "info_count": {
-        "name": "Antall infomeldinger"
+      "info_messages": {
+        "name": "Infomeldinger"
       },
       "avail_charge_power": {
         "name": "Tilgjengelig ladeeffekt"

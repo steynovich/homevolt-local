@@ -100,6 +100,21 @@ def _get_aggregated_ems_info(data: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def _get_sensor_by_type(data: dict[str, Any], sensor_type: str) -> dict[str, Any]:
+    """Get sensor data by type (grid, solar, load) from EMS sensors array.
+
+    The sensors array is at the top level of the EMS response, alongside
+    the ems and aggregated objects. Each sensor has a type field
+    that identifies its type (grid, solar, load).
+    """
+    sensors = data.get("sensors", [])
+    if isinstance(sensors, list):
+        for sensor in sensors:
+            if isinstance(sensor, dict) and sensor.get("type") == sensor_type:
+                return sensor
+    return {}
+
+
 def _get_local_ems(data: dict[str, Any]) -> dict[str, Any]:
     """Get local EMS entry (where ecu_host is empty)."""
     ems_list = data.get("ems", [])
@@ -295,10 +310,10 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         device_type=DeviceType.ECU,
         value_fn=lambda data: _get_local_ems(data).get("ems_info", {}).get("fw_version"),
     ),
-    # Alarm count - length of alarm_str list from local EMS entry
+    # Alarm messages - length of alarm_str list from local EMS entry
     HomevoltSensorEntityDescription(
-        key="alarm_count",
-        translation_key="alarm_count",
+        key="alarm_messages",
+        translation_key="alarm_messages",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_type=DeviceType.ECU,
@@ -309,10 +324,10 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
             "messages": _get_local_ems(data).get("ems_data", {}).get("alarm_str"),
         },
     ),
-    # Warning count - length of warning_str list from local EMS entry
+    # Warning messages - length of warning_str list from local EMS entry
     HomevoltSensorEntityDescription(
-        key="warning_count",
-        translation_key="warning_count",
+        key="warning_messages",
+        translation_key="warning_messages",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_type=DeviceType.ECU,
@@ -323,10 +338,10 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
             "messages": _get_local_ems(data).get("ems_data", {}).get("warning_str"),
         },
     ),
-    # Info count - length of info_str list from local EMS entry
+    # Info messages - length of info_str list from local EMS entry
     HomevoltSensorEntityDescription(
-        key="info_count",
-        translation_key="info_count",
+        key="info_messages",
+        translation_key="info_messages",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_type=DeviceType.ECU,
@@ -517,9 +532,143 @@ OTA_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
     ),
 )
 
+# External Sensor Sensors (Grid, Solar, Load from sensors array in ems.json)
+# These sensors read from the sensors array at the top level of ems.json response
+EXTERNAL_SENSOR_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
+    # Grid sensors
+    HomevoltSensorEntityDescription(
+        key="grid_power",
+        translation_key="grid_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "grid").get("total_power"),
+    ),
+    HomevoltSensorEntityDescription(
+        key="grid_energy_imported",
+        translation_key="grid_energy_imported",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "grid").get("energy_imported"),
+    ),
+    HomevoltSensorEntityDescription(
+        key="grid_energy_exported",
+        translation_key="grid_energy_exported",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "grid").get("energy_exported"),
+    ),
+    HomevoltSensorEntityDescription(
+        key="grid_rssi",
+        translation_key="grid_rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "grid").get("rssi"),
+    ),
+    # Solar sensors
+    HomevoltSensorEntityDescription(
+        key="solar_power",
+        translation_key="solar_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "solar").get("total_power"),
+    ),
+    HomevoltSensorEntityDescription(
+        key="solar_energy_imported",
+        translation_key="solar_energy_imported",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "solar").get("energy_imported"),
+    ),
+    HomevoltSensorEntityDescription(
+        key="solar_energy_exported",
+        translation_key="solar_energy_exported",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "solar").get("energy_exported"),
+    ),
+    HomevoltSensorEntityDescription(
+        key="solar_rssi",
+        translation_key="solar_rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "solar").get("rssi"),
+    ),
+    # Load sensors
+    HomevoltSensorEntityDescription(
+        key="load_power",
+        translation_key="load_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "load").get("total_power"),
+    ),
+    HomevoltSensorEntityDescription(
+        key="load_energy_imported",
+        translation_key="load_energy_imported",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "load").get("energy_imported"),
+    ),
+    HomevoltSensorEntityDescription(
+        key="load_energy_exported",
+        translation_key="load_energy_exported",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "load").get("energy_exported"),
+    ),
+    HomevoltSensorEntityDescription(
+        key="load_rssi",
+        translation_key="load_rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        data_key="ems",
+        device_type=DeviceType.ECU,
+        value_fn=lambda data: _get_sensor_by_type(data, "load").get("rssi"),
+    ),
+)
+
 # Cluster-only sensors (only available on cluster device, from aggregated data)
 CLUSTER_ONLY_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
     # Rated power from aggregated.ems_info
+    # Note: _get_data() wraps aggregated in ems[0], so use _get_first_ems_info
     HomevoltSensorEntityDescription(
         key="rated_power",
         translation_key="rated_power",
@@ -528,13 +677,33 @@ CLUSTER_ONLY_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         data_key="ems",
         device_type=DeviceType.CLUSTER,
-        value_fn=lambda data: _get_aggregated_ems_info(data).get("rated_power"),
+        value_fn=lambda data: _get_first_ems_info(data).get("rated_power"),
     ),
 )
 
 ALL_SENSORS = (
-    EMS_SENSORS + MAINS_SENSORS + STATUS_SENSORS + SCHEDULE_SENSORS + EMS_MODE_SENSORS + OTA_SENSORS
+    EMS_SENSORS
+    + MAINS_SENSORS
+    + STATUS_SENSORS
+    + SCHEDULE_SENSORS
+    + EMS_MODE_SENSORS
+    + OTA_SENSORS
+    + EXTERNAL_SENSOR_SENSORS
 )
+
+
+def _has_external_sensor(coordinator: HomevoltCoordinator, sensor_type: str) -> bool:
+    """Check if an external sensor type is present in the device data."""
+    ems_data = coordinator.data.get("ems", {})
+    if not isinstance(ems_data, dict):
+        return False
+    sensors = ems_data.get("sensors", [])
+    if not isinstance(sensors, list):
+        return False
+    return any(
+        isinstance(sensor, dict) and sensor.get("type") == sensor_type
+        for sensor in sensors
+    )
 
 
 async def async_setup_entry(
@@ -547,8 +716,34 @@ async def async_setup_entry(
 
     entities: list[HomevoltSensor] = []
 
+    # Determine which external sensor types are available
+    has_grid = _has_external_sensor(coordinator, "grid")
+    has_solar = _has_external_sensor(coordinator, "solar")
+    has_load = _has_external_sensor(coordinator, "load")
+
+    # Map sensor keys to their availability
+    external_sensor_availability = {
+        "grid_power": has_grid,
+        "grid_energy_imported": has_grid,
+        "grid_energy_exported": has_grid,
+        "grid_rssi": has_grid,
+        "solar_power": has_solar,
+        "solar_energy_imported": has_solar,
+        "solar_energy_exported": has_solar,
+        "solar_rssi": has_solar,
+        "load_power": has_load,
+        "load_energy_imported": has_load,
+        "load_energy_exported": has_load,
+        "load_rssi": has_load,
+    }
+
     for description in ALL_SENSORS:
-        # ECU device always gets all sensors with individual data
+        # Skip external sensors that aren't available on this device
+        if description.key in external_sensor_availability:
+            if not external_sensor_availability[description.key]:
+                continue
+
+        # ECU device gets all available sensors with individual data
         entities.append(HomevoltSensor(coordinator, description, DeviceType.ECU))
 
         # Leader also gets cluster sensors with aggregated data
@@ -597,8 +792,10 @@ class HomevoltSensor(CoordinatorEntity[HomevoltCoordinator], SensorEntity):
         if self._device_type == DeviceType.CLUSTER and self.entity_description.data_key == "ems":
             # Wrap aggregated data in ems list so _get_first_ems/_get_ems_data work correctly
             # If aggregated is missing, use empty dict - sensors will return unavailable
+            # Preserve sensors array at top level for external sensor access
             aggregated = data.get("aggregated", {})
-            data = {**data, "ems": [aggregated]}
+            sensors = data.get("sensors", [])
+            data = {"ems": [aggregated], "sensors": sensors}
 
         return data
 

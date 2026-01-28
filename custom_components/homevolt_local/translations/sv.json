@@ -347,6 +347,15 @@
       "load_power": {
         "name": "Lasteffekt"
       },
+      "load_energy_imported": {
+        "name": "Last energi förbrukad"
+      },
+      "load_energy_exported": {
+        "name": "Last energi exporterad"
+      },
+      "load_rssi": {
+        "name": "Lastsensor-signalstyrka"
+      },
       "inverter_power": {
         "name": "Växelriktareffekt"
       },
@@ -356,8 +365,17 @@
       "grid_energy_exported": {
         "name": "Exporterad nätenergi"
       },
-      "solar_energy": {
-        "name": "Solenergi"
+      "grid_rssi": {
+        "name": "Nätsensor-signalstyrka"
+      },
+      "solar_energy_imported": {
+        "name": "Solenergi producerad"
+      },
+      "solar_energy_exported": {
+        "name": "Solenergi exporterad"
+      },
+      "solar_rssi": {
+        "name": "Solsensor-signalstyrka"
       },
       "battery_energy_imported": {
         "name": "Batteriladdningsenergi"
@@ -416,14 +434,14 @@
       "firmware_version": {
         "name": "Firmware-version"
       },
-      "alarm_count": {
-        "name": "Antal larm"
+      "alarm_messages": {
+        "name": "Larmmeddelanden"
       },
-      "warning_count": {
-        "name": "Antal varningar"
+      "warning_messages": {
+        "name": "Varningsmeddelanden"
       },
-      "info_count": {
-        "name": "Antal infomeddelanden"
+      "info_messages": {
+        "name": "Infomeddelanden"
       },
       "avail_charge_power": {
         "name": "Tillgänglig laddningseffekt"

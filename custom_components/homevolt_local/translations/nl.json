@@ -347,6 +347,15 @@
       "load_power": {
         "name": "Belastingvermogen"
       },
+      "load_energy_imported": {
+        "name": "Belasting energie verbruikt"
+      },
+      "load_energy_exported": {
+        "name": "Belasting energie geëxporteerd"
+      },
+      "load_rssi": {
+        "name": "Belastingsensor-signaalsterkte"
+      },
       "inverter_power": {
         "name": "Omvormervermogen"
       },
@@ -356,8 +365,17 @@
       "grid_energy_exported": {
         "name": "Geëxporteerde netenergie"
       },
-      "solar_energy": {
-        "name": "Zonne-energie"
+      "grid_rssi": {
+        "name": "Netsensor-signaalsterkte"
+      },
+      "solar_energy_imported": {
+        "name": "Zonne-energie geproduceerd"
+      },
+      "solar_energy_exported": {
+        "name": "Zonne-energie geëxporteerd"
+      },
+      "solar_rssi": {
+        "name": "Zonnesensor-signaalsterkte"
       },
       "battery_energy_imported": {
         "name": "Batterij opgeladen energie"
@@ -416,14 +434,14 @@
       "firmware_version": {
         "name": "Firmwareversie"
       },
-      "alarm_count": {
-        "name": "Aantal alarmen"
+      "alarm_messages": {
+        "name": "Alarmmeldingen"
       },
-      "warning_count": {
-        "name": "Aantal waarschuwingen"
+      "warning_messages": {
+        "name": "Waarschuwingsmeldingen"
       },
-      "info_count": {
-        "name": "Aantal infomeldingen"
+      "info_messages": {
+        "name": "Infomeldingen"
       },
       "avail_charge_power": {
         "name": "Beschikbaar laadvermogen"

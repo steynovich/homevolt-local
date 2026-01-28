@@ -99,13 +99,29 @@ If your Homevolt device broadcasts mDNS (hostname starting with `homevolt`), Hom
 | Schedule Mode | Schedule control mode (local/remote) | - |
 | EMS Mode | Cluster mode (Leader/Follower) | - |
 | Firmware Version | ECU firmware version | - |
-| Alarm/Warning/Info Count | Count of active messages | - |
+| Alarm/Warning/Info Messages | Count of active messages | - |
 | Available Charge Power | Available power for charging | W |
 | Available Discharge Power | Available power for discharging | W |
 | Available Charge Energy | Available energy for charging | Wh |
 | Available Discharge Energy | Available energy for discharging | Wh |
 | Available Inverter Charge Power | Available inverter charge power | W |
 | Available Inverter Discharge Power | Available inverter discharge power | W |
+
+**External sensors (ECU-only, auto-detected):**
+
+| Sensor | Description | Unit |
+|--------|-------------|------|
+| Grid Power | Grid sensor power measurement | W |
+| Grid Energy Imported | Energy imported from grid | kWh |
+| Grid Energy Exported | Energy exported to grid | kWh |
+| Grid Signal Strength | Grid sensor RSSI | dBm |
+| Solar Power | Solar sensor power measurement | W |
+| Solar Energy Imported | Energy produced by solar | kWh |
+| Load Power | Load sensor power measurement | W |
+| Load Energy Imported | Energy consumed by loads | kWh |
+| Load Energy Exported | Energy from loads | kWh |
+
+> **Note:** External sensors only appear when the respective sensor (grid/solar/load) is detected on your device. Grid and Solar signal strength sensors are enabled by default.
 
 **Diagnostic sensors (disabled by default):**
 
@@ -114,6 +130,8 @@ If your Homevolt device broadcasts mDNS (hostname starting with `homevolt`), Hom
 | Mains Voltage | Grid voltage (RMS) | V |
 | Mains Frequency | Grid frequency | Hz |
 | Uptime | System uptime | days |
+| Solar Energy Exported | Energy exported from solar (rarely used) | kWh |
+| Load Signal Strength | Load sensor RSSI | dBm |
 
 ### Binary Sensors
 
