@@ -449,6 +449,115 @@ automation:
               min_soc: 20
 ```
 
+## Integration with Day-Ahead Optimizer
+
+The [Day-Ahead Optimizer](https://github.com/corneel27/day-ahead) is a Home Assistant add-on that automatically optimizes battery charging based on dynamic electricity prices. It calculates the most cost-effective times to charge and discharge your battery, then sets Home Assistant helper entities every 15 minutes (or hourly) which can be bridged to control your Homevolt.
+
+### Step 1: Create Helper Entities
+
+Create these helper entities in Home Assistant that Day-Ahead will write to:
+
+```yaml
+input_number:
+  homevolt_dao_power_setpoint:
+    name: "Day-Ahead Power Setpoint"
+    min: -6000
+    max: 6000
+    step: 100
+    unit_of_measurement: "W"
+    mode: box
+
+input_select:
+  homevolt_dao_mode:
+    name: "Day-Ahead Operating Mode"
+    options:
+      - "Aan"
+      - "Uit"
+
+input_boolean:
+  homevolt_dao_active:
+    name: "Day-Ahead Active"
+```
+
+### Step 2: Configure Day-Ahead
+
+Add the following battery configuration to Day-Ahead's `options.json`:
+
+```json
+{
+  "battery": [{
+    "name": "Homevolt",
+    "entity actual level": "sensor.homevolt_battery_state_of_charge",
+    "capacity": 11.5,
+    "upper limit": 100,
+    "lower limit": 10,
+    "charge stages": [
+      {"power": 5750}
+    ],
+    "discharge stages": [
+      {"power": 5750}
+    ],
+    "entity set power feedin": "input_number.homevolt_dao_power_setpoint",
+    "entity set operating mode": "input_select.homevolt_dao_mode",
+    "entity set operating mode on": "Aan",
+    "entity set operating mode off": "Uit"
+  }]
+}
+```
+
+Adjust `capacity`, `upper limit`, `lower limit`, and power values to match your system.
+
+### Step 3: Create Bridge Automation
+
+This automation bridges Day-Ahead's helper entity changes to Homevolt services:
+
+```yaml
+automation:
+  - alias: "Day-Ahead → Homevolt Bridge"
+    trigger:
+      - platform: state
+        entity_id: input_number.homevolt_dao_power_setpoint
+    condition:
+      - condition: state
+        entity_id: input_boolean.homevolt_dao_active
+        state: "on"
+    action:
+      - choose:
+          # Charging (positive power)
+          - conditions:
+              - "{{ trigger.to_state.state | float > 0 }}"
+            sequence:
+              - service: homevolt_local.set_grid_charge
+                data:
+                  device_id: <your_device_id>
+                  setpoint: "{{ trigger.to_state.state | int }}"
+          # Discharging (negative power)
+          - conditions:
+              - "{{ trigger.to_state.state | float < 0 }}"
+            sequence:
+              - service: homevolt_local.set_discharge
+                data:
+                  device_id: <your_device_id>
+                  setpoint: "{{ (trigger.to_state.state | float | abs) | int }}"
+          # Idle (zero power)
+          - conditions:
+              - "{{ trigger.to_state.state | float == 0 }}"
+            sequence:
+              - service: homevolt_local.set_idle
+                data:
+                  device_id: <your_device_id>
+```
+
+Replace `<your_device_id>` with your Homevolt device ID (find it in **Settings** → **Devices & Services** → **Homevolt Local**).
+
+### Notes
+
+- Day-Ahead recalculates and updates setpoints every 15 minutes by default
+- Ensure the "Settings local" switch is enabled on your Homevolt device
+- Positive power values = charging from grid, negative = discharging to grid
+- The `input_boolean.homevolt_dao_active` helper allows you to disable the bridge automation without removing it
+- See the [Day-Ahead documentation](https://github.com/corneel27/day-ahead) for full configuration options
+
 ## Known Limitations
 
 - **Docker on macOS**: Zeroconf discovery may not work when running Home Assistant in Docker on macOS unless using host networking mode
