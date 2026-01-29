@@ -297,6 +297,20 @@
           "description": "Optioneel maximum laadniveau (%)"
         }
       }
+    },
+    "set_schedule": {
+      "name": "Schema instellen",
+      "description": "Vervang het batterijschema met een lijst van items. Vereist lokale modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat waarvoor het schema ingesteld moet worden"
+        },
+        "schedule": {
+          "name": "Schema",
+          "description": "Lijst van schema-items met type (0-9), tijden, SOC-limieten en vermogensinstellingen"
+        }
+      }
     }
   },
   "entity": {

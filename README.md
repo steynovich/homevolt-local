@@ -244,6 +244,7 @@ The integration provides services to control battery charging modes. **All servi
 | `homevolt_local.set_solar_charge` | Charge from solar production only |
 | `homevolt_local.set_solar_charge_discharge` | Solar-based grid management |
 | `homevolt_local.set_full_solar_export` | Export all solar production |
+| `homevolt_local.set_schedule` | Replace battery schedule with a list of entries |
 
 ### Service Parameters
 
@@ -278,6 +279,21 @@ The integration provides services to control battery charging modes. **All servi
 - `discharge_setpoint` (optional): Maximum discharge power in watts
 - `min_soc` (optional): Minimum state of charge (%)
 - `max_soc` (optional): Maximum state of charge (%)
+
+**set_schedule:**
+- `schedule` (required): List of schedule entries, each containing:
+  - `type` (required): Control mode (0-9, see Schedule Control Modes table above)
+  - `from_time` (optional): Start time in ISO 8601 format (`YYYY-MM-DDTHH:mm:ss`)
+  - `to_time` (optional): End time in ISO 8601 format (`YYYY-MM-DDTHH:mm:ss`)
+  - `min_soc` (optional): Minimum state of charge (0-100%)
+  - `max_soc` (optional): Maximum state of charge (0-100%)
+  - `setpoint` (optional): Power setpoint in watts
+  - `max_charge` (optional): Maximum charge power in watts
+  - `max_discharge` (optional): Maximum discharge power in watts
+  - `import_limit` (optional): Grid import limit in watts
+  - `export_limit` (optional): Grid export limit in watts
+
+> **Note:** The first entry in the schedule replaces all existing entries. Subsequent entries are added to the schedule.
 
 ### Example Service Call
 
@@ -402,6 +418,31 @@ automation:
       - service: homevolt_local.set_idle
         data:
           device_id: <your_device_id>
+```
+
+### Time-of-Use Schedule
+
+```yaml
+automation:
+  - alias: "Set daily battery schedule"
+    trigger:
+      - platform: time
+        at: "00:00:00"
+    action:
+      - service: homevolt_local.set_schedule
+        data:
+          device_id: <your_device_id>
+          schedule:
+            - type: 3  # Grid charge during cheap hours
+              from_time: "2024-01-15T02:00:00"
+              to_time: "2024-01-15T06:00:00"
+              max_charge: 5000
+              max_soc: 90
+            - type: 4  # Grid discharge during peak hours
+              from_time: "2024-01-15T17:00:00"
+              to_time: "2024-01-15T20:00:00"
+              max_discharge: 3000
+              min_soc: 20
 ```
 
 ## Known Limitations

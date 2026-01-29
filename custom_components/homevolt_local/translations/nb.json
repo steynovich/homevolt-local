@@ -297,6 +297,20 @@
           "description": "Valgfritt maksimum ladenivå (%)"
         }
       }
+    },
+    "set_schedule": {
+      "name": "Sett tidsplan",
+      "description": "Erstatt batteritidsplanen med en liste over oppføringer. Krever lokal modus.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som tidsplanen skal settes for"
+        },
+        "schedule": {
+          "name": "Tidsplan",
+          "description": "Liste over tidsplanoppføringer med type (0-9), tider, SOC-grenser og effektinnstillinger"
+        }
+      }
     }
   },
   "entity": {

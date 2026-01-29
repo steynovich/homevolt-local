@@ -297,6 +297,20 @@
           "description": "Optionaler maximaler Ladezustand (%)"
         }
       }
+    },
+    "set_schedule": {
+      "name": "Zeitplan setzen",
+      "description": "Ersetzen Sie den Batteriezeitplan durch eine Liste von Einträgen. Erfordert lokalen Modus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, für das der Zeitplan gesetzt werden soll"
+        },
+        "schedule": {
+          "name": "Zeitplan",
+          "description": "Liste der Zeitplaneinträge mit Typ (0-9), Zeiten, SOC-Grenzen und Leistungseinstellungen"
+        }
+      }
     }
   },
   "entity": {

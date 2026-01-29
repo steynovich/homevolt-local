@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
@@ -44,6 +45,7 @@ SERVICE_SET_GRID_CHARGE_DISCHARGE = "set_grid_charge_discharge"
 SERVICE_SET_SOLAR_CHARGE = "set_solar_charge"
 SERVICE_SET_SOLAR_CHARGE_DISCHARGE = "set_solar_charge_discharge"
 SERVICE_SET_FULL_SOLAR_EXPORT = "set_full_solar_export"
+SERVICE_SET_SCHEDULE = "set_schedule"
 
 SERVICE_CLEAR_SCHEDULE_SCHEMA = vol.Schema(
     {
@@ -131,6 +133,43 @@ SERVICE_SET_FULL_SOLAR_EXPORT_SCHEMA = vol.Schema(
         vol.Optional("setpoint"): vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional("min_soc"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
         vol.Optional("max_soc"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+    }
+)
+
+# ISO 8601 datetime pattern (YYYY-MM-DDTHH:mm:ss)
+ISO8601_DATETIME_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$")
+
+
+def validate_iso8601_datetime(value: str) -> str:
+    """Validate ISO 8601 datetime string to prevent command injection."""
+    if not isinstance(value, str):
+        raise vol.Invalid(f"Expected string, got {type(value).__name__}")
+    if not ISO8601_DATETIME_PATTERN.match(value):
+        raise vol.Invalid(
+            f"Invalid datetime format: {value}. Expected YYYY-MM-DDTHH:mm:ss"
+        )
+    return value
+
+
+SCHEDULE_ENTRY_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): vol.All(vol.Coerce(int), vol.Range(min=0, max=9)),
+        vol.Optional("from_time"): validate_iso8601_datetime,
+        vol.Optional("to_time"): validate_iso8601_datetime,
+        vol.Optional("min_soc"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+        vol.Optional("max_soc"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+        vol.Optional("setpoint"): vol.Coerce(int),
+        vol.Optional("max_charge"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional("max_discharge"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional("import_limit"): vol.Coerce(int),
+        vol.Optional("export_limit"): vol.Coerce(int),
+    }
+)
+
+SERVICE_SET_SCHEDULE_SCHEMA = vol.Schema(
+    {
+        vol.Required("device_id"): cv.string,
+        vol.Required("schedule"): vol.All(cv.ensure_list, [SCHEDULE_ENTRY_SCHEMA]),
     }
 )
 
@@ -564,6 +603,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             SERVICE_SET_FULL_SOLAR_EXPORT,
             async_set_full_solar_export,
             schema=SERVICE_SET_FULL_SOLAR_EXPORT_SCHEMA,
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_SCHEDULE):
+
+        async def async_set_schedule(call: ServiceCall) -> None:
+            """Handle the set_schedule service call."""
+            device_id = call.data["device_id"]
+            schedule_entries = call.data["schedule"]
+            device_registry = dr.async_get(hass)
+            device_entry = device_registry.async_get(device_id)
+
+            if device_entry is None:
+                _LOGGER.error("Device %s not found", device_id)
+                return
+
+            # Find the config entry for this device
+            for config_entry_id in device_entry.config_entries:
+                config_entry = hass.config_entries.async_get_entry(config_entry_id)
+                if config_entry and config_entry.domain == DOMAIN:
+                    coord: HomevoltCoordinator = config_entry.runtime_data
+                    try:
+                        await coord.api.set_schedule(schedule_entries)
+                        await coord.async_request_refresh()
+                    except HomevoltNotLocalModeError as err:
+                        raise HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="not_local_mode",
+                        ) from err
+                    return
+
+            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_SCHEDULE,
+            async_set_schedule,
+            schema=SERVICE_SET_SCHEDULE_SCHEMA,
         )
 
     return True

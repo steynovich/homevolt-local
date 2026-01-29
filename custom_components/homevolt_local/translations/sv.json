@@ -297,6 +297,20 @@
           "description": "Valfri högsta laddningsnivå (%)"
         }
       }
+    },
+    "set_schedule": {
+      "name": "Sätt schema",
+      "description": "Ersätt batterischemat med en lista av poster. Kräver lokalt läge.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som schemat ska sättas för"
+        },
+        "schedule": {
+          "name": "Schema",
+          "description": "Lista av schemaposter med typ (0-9), tider, SOC-gränser och effektinställningar"
+        }
+      }
     }
   },
   "entity": {

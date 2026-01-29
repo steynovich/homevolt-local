@@ -297,6 +297,20 @@
           "description": "Optional maximum state of charge (%)"
         }
       }
+    },
+    "set_schedule": {
+      "name": "Set schedule",
+      "description": "Replace the battery schedule with a list of entries. Requires local mode to be enabled.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Homevolt device to set the schedule for"
+        },
+        "schedule": {
+          "name": "Schedule",
+          "description": "List of schedule entries with type (0-9), times, SOC limits, and power settings"
+        }
+      }
     }
   },
   "entity": {

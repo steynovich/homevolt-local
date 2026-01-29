@@ -970,6 +970,152 @@ class TestHomevoltApiSetGridChargeDischarge:
             await api.set_grid_charge_discharge(setpoint=5000)
 
 
+class TestHomevoltApiBuildScheduleCommand:
+    """Test API _build_schedule_command method."""
+
+    def test_build_schedule_command_type_only(self, api: HomevoltApi) -> None:
+        """Test building command with type only."""
+        entry = {"type": 1}
+        result = api._build_schedule_command(entry)
+        assert result == "1"
+
+    def test_build_schedule_command_with_time(self, api: HomevoltApi) -> None:
+        """Test building command with time parameters."""
+        entry = {
+            "type": 1,
+            "from_time": "2024-01-15T23:00:00",
+            "to_time": "2024-01-16T07:00:00",
+        }
+        result = api._build_schedule_command(entry)
+        assert result == "1 --from 2024-01-15T23:00:00 --to 2024-01-16T07:00:00"
+
+    def test_build_schedule_command_with_soc(self, api: HomevoltApi) -> None:
+        """Test building command with SOC constraints."""
+        entry = {"type": 2, "min_soc": 20, "max_soc": 80}
+        result = api._build_schedule_command(entry)
+        assert result == "2 --min 20 --max 80"
+
+    def test_build_schedule_command_with_power(self, api: HomevoltApi) -> None:
+        """Test building command with power settings."""
+        entry = {"type": 5, "setpoint": 3000, "max_charge": 4000, "max_discharge": 5000}
+        result = api._build_schedule_command(entry)
+        assert result == "5 -s 3000 -c 4000 -d 5000"
+
+    def test_build_schedule_command_with_limits(self, api: HomevoltApi) -> None:
+        """Test building command with grid limits."""
+        entry = {"type": 8, "import_limit": 1000, "export_limit": 2000}
+        result = api._build_schedule_command(entry)
+        assert result == "8 -l 1000 -x 2000"
+
+    def test_build_schedule_command_all_parameters(self, api: HomevoltApi) -> None:
+        """Test building command with all parameters."""
+        entry = {
+            "type": 1,
+            "from_time": "2024-01-15T23:00:00",
+            "to_time": "2024-01-16T07:00:00",
+            "min_soc": 10,
+            "max_soc": 90,
+            "setpoint": 3000,
+            "max_charge": 4000,
+            "max_discharge": 5000,
+            "import_limit": 1000,
+            "export_limit": 2000,
+        }
+        result = api._build_schedule_command(entry)
+        assert (
+            result == "1 --from 2024-01-15T23:00:00 --to 2024-01-16T07:00:00 "
+            "--min 10 --max 90 -s 3000 -c 4000 -d 5000 -l 1000 -x 2000"
+        )
+
+
+class TestHomevoltApiSetSchedule:
+    """Test API set_schedule method."""
+
+    async def test_set_schedule_single_entry(
+        self, api: HomevoltApi, mock_session: MagicMock
+    ) -> None:
+        """Test set_schedule with single entry uses sched_set."""
+        mock_schedule_response = AsyncMock()
+        mock_schedule_response.status = 200
+        mock_schedule_response.json = AsyncMock(return_value={"local_mode": True})
+        mock_schedule_response.raise_for_status = MagicMock()
+
+        mock_console_response = AsyncMock()
+        mock_console_response.status = 200
+        mock_console_response.text = AsyncMock(return_value='{"exit_code": 0}')
+        mock_console_response.raise_for_status = MagicMock()
+
+        mock_session.get = MagicMock(return_value=AsyncContextManager(mock_schedule_response))
+        mock_session.post = MagicMock(return_value=AsyncContextManager(mock_console_response))
+
+        entries = [{"type": 1, "max_charge": 3000, "max_soc": 80}]
+        results = await api.set_schedule(entries)
+
+        assert len(results) == 1
+        call_args = mock_session.post.call_args
+        assert call_args[1]["data"] == {"cmd": "sched_set 1 --max 80 -c 3000"}
+
+    async def test_set_schedule_multiple_entries(
+        self, api: HomevoltApi, mock_session: MagicMock
+    ) -> None:
+        """Test set_schedule with multiple entries uses sched_set then sched_add."""
+        mock_schedule_response = AsyncMock()
+        mock_schedule_response.status = 200
+        mock_schedule_response.json = AsyncMock(return_value={"local_mode": True})
+        mock_schedule_response.raise_for_status = MagicMock()
+
+        mock_console_response = AsyncMock()
+        mock_console_response.status = 200
+        mock_console_response.text = AsyncMock(return_value='{"exit_code": 0}')
+        mock_console_response.raise_for_status = MagicMock()
+
+        mock_session.get = MagicMock(return_value=AsyncContextManager(mock_schedule_response))
+        mock_session.post = MagicMock(return_value=AsyncContextManager(mock_console_response))
+
+        entries = [
+            {"type": 1, "from_time": "2024-01-15T23:00:00", "to_time": "2024-01-16T07:00:00"},
+            {"type": 2, "from_time": "2024-01-16T17:00:00", "to_time": "2024-01-16T20:00:00"},
+        ]
+        results = await api.set_schedule(entries)
+
+        assert len(results) == 2
+        assert mock_session.post.call_count == 2
+
+        # First call should use sched_set
+        first_call_args = mock_session.post.call_args_list[0]
+        assert "sched_set 1" in first_call_args[1]["data"]["cmd"]
+
+        # Second call should use sched_add
+        second_call_args = mock_session.post.call_args_list[1]
+        assert "sched_add 2" in second_call_args[1]["data"]["cmd"]
+
+    async def test_set_schedule_empty_entries_raises_error(
+        self, api: HomevoltApi, mock_session: MagicMock
+    ) -> None:
+        """Test set_schedule with empty entries raises ValueError."""
+        with pytest.raises(ValueError) as exc_info:
+            await api.set_schedule([])
+
+        assert "empty" in str(exc_info.value)
+
+    async def test_set_schedule_raises_error_when_not_local_mode(
+        self, api: HomevoltApi, mock_session: MagicMock
+    ) -> None:
+        """Test set_schedule raises error when not in local mode."""
+        mock_schedule_response = AsyncMock()
+        mock_schedule_response.status = 200
+        mock_schedule_response.json = AsyncMock(return_value={"local_mode": False})
+        mock_schedule_response.raise_for_status = MagicMock()
+
+        mock_session.get = MagicMock(return_value=AsyncContextManager(mock_schedule_response))
+
+        with pytest.raises(HomevoltNotLocalModeError):
+            await api.set_schedule([{"type": 1}])
+
+        # Verify no POST was made
+        mock_session.post.assert_not_called()
+
+
 class AsyncContextManager:
     """Async context manager wrapper for mock responses."""
 

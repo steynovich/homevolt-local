@@ -712,3 +712,95 @@ class HomevoltApi:
         if max_soc is not None:
             cmd += f" --max {max_soc}"
         return await self.send_console_command(cmd)
+
+    def _build_schedule_command(self, entry: dict[str, Any]) -> str:
+        """Build a schedule command string from an entry dict.
+
+        Args:
+            entry: Dict with schedule entry parameters:
+                - type: Control mode (0-9, required)
+                - from_time: Start time (ISO 8601)
+                - to_time: End time (ISO 8601)
+                - min_soc: Minimum SOC constraint (0-100%)
+                - max_soc: Maximum SOC constraint (0-100%)
+                - setpoint: Power setpoint in watts
+                - max_charge: Maximum charge power in watts
+                - max_discharge: Maximum discharge power in watts
+                - import_limit: Grid import limit in watts
+                - export_limit: Grid export limit in watts
+
+        Returns:
+            Command string without the sched_set/sched_add prefix
+        """
+        parts = [str(entry["type"])]
+
+        if "from_time" in entry:
+            parts.append(f"--from {entry['from_time']}")
+        if "to_time" in entry:
+            parts.append(f"--to {entry['to_time']}")
+        if "min_soc" in entry:
+            parts.append(f"--min {entry['min_soc']}")
+        if "max_soc" in entry:
+            parts.append(f"--max {entry['max_soc']}")
+        if "setpoint" in entry:
+            parts.append(f"-s {entry['setpoint']}")
+        if "max_charge" in entry:
+            parts.append(f"-c {entry['max_charge']}")
+        if "max_discharge" in entry:
+            parts.append(f"-d {entry['max_discharge']}")
+        if "import_limit" in entry:
+            parts.append(f"-l {entry['import_limit']}")
+        if "export_limit" in entry:
+            parts.append(f"-x {entry['export_limit']}")
+
+        return " ".join(parts)
+
+    async def set_schedule(
+        self, entries: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Replace the current schedule with new entries.
+
+        Checks that the device is in local mode before sending commands.
+        Uses sched_set for the first entry (clears existing schedule),
+        then sched_add for subsequent entries.
+
+        Args:
+            entries: List of schedule entry dicts. Each entry must have:
+                - type: Control mode (0-9, required)
+                And optionally:
+                - from_time: Start time (ISO 8601)
+                - to_time: End time (ISO 8601)
+                - min_soc: Minimum SOC constraint (0-100%)
+                - max_soc: Maximum SOC constraint (0-100%)
+                - setpoint: Power setpoint in watts
+                - max_charge: Maximum charge power in watts
+                - max_discharge: Maximum discharge power in watts
+                - import_limit: Grid import limit in watts
+                - export_limit: Grid export limit in watts
+
+        Returns:
+            List of response dicts, one per entry
+
+        Raises:
+            HomevoltNotLocalModeError: If device is not in local mode
+            ValueError: If entries list is empty
+        """
+        if not entries:
+            raise ValueError("Schedule entries list cannot be empty")
+
+        schedule = await self.get_schedule()
+        if not schedule.get("local_mode", False):
+            raise HomevoltNotLocalModeError(
+                "Cannot set schedule: device is not in local mode. "
+                "Enable local mode first to prevent remote overrides."
+            )
+
+        results = []
+        for i, entry in enumerate(entries):
+            cmd_args = self._build_schedule_command(entry)
+            # First entry uses sched_set (clears existing), rest use sched_add
+            prefix = "sched_set" if i == 0 else "sched_add"
+            result = await self.send_console_command(f"{prefix} {cmd_args}")
+            results.append(result)
+
+        return results

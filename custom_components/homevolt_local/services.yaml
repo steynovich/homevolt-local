@@ -432,3 +432,21 @@ set_full_solar_export:
           step: 1
           unit_of_measurement: "%"
           mode: box
+
+set_schedule:
+  name: Set schedule
+  description: Replace the battery schedule with a list of entries. Requires local mode to be enabled.
+  fields:
+    device_id:
+      name: Device
+      description: The Homevolt device to set the schedule for
+      required: true
+      selector:
+        device:
+          integration: homevolt_local
+    schedule:
+      name: Schedule
+      description: "List of schedule entries. Each entry must have 'type' (0-9) and optionally: from_time, to_time (ISO 8601), min_soc, max_soc (0-100%), setpoint, max_charge, max_discharge, import_limit, export_limit (watts)"
+      required: true
+      selector:
+        object:
