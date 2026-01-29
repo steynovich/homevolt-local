@@ -534,17 +534,45 @@ automation:
         state: "on"
     action:
       - choose:
-          # Charging (positive power)
+          # Charging with balance (grid charge)
           - conditions:
               - "{{ trigger.to_state.state | float > 0 }}"
+              - condition: state
+                entity_id: input_boolean.homevolt_dao_balance
+                state: "on"
             sequence:
               - service: homevolt_local.set_grid_charge
                 data:
                   device_id: <your_device_id>
                   setpoint: "{{ trigger.to_state.state | int }}"
-          # Discharging (negative power)
+          # Charging without balance (inverter charge)
+          - conditions:
+              - "{{ trigger.to_state.state | float > 0 }}"
+              - condition: state
+                entity_id: input_boolean.homevolt_dao_balance
+                state: "off"
+            sequence:
+              - service: homevolt_local.set_charge
+                data:
+                  device_id: <your_device_id>
+                  setpoint: "{{ trigger.to_state.state | int }}"
+          # Discharging with balance (grid discharge)
           - conditions:
               - "{{ trigger.to_state.state | float < 0 }}"
+              - condition: state
+                entity_id: input_boolean.homevolt_dao_balance
+                state: "on"
+            sequence:
+              - service: homevolt_local.set_grid_discharge
+                data:
+                  device_id: <your_device_id>
+                  setpoint: "{{ (trigger.to_state.state | float | abs) | int }}"
+          # Discharging without balance (inverter discharge)
+          - conditions:
+              - "{{ trigger.to_state.state | float < 0 }}"
+              - condition: state
+                entity_id: input_boolean.homevolt_dao_balance
+                state: "off"
             sequence:
               - service: homevolt_local.set_discharge
                 data:
@@ -565,7 +593,8 @@ Replace `<your_device_id>` with your Homevolt device ID (find it in **Settings**
 
 - Day-Ahead recalculates and updates setpoints every 15 minutes by default
 - Ensure the "Settings local" switch is enabled on your Homevolt device
-- Positive power values = charging from grid, negative = discharging to grid
+- Positive power values = charging, negative = discharging
+- **Balance switch**: When enabled, uses grid charge/discharge (actively pushes/pulls from grid). When disabled, uses inverter charge/discharge (follows home consumption)
 - The `input_boolean.homevolt_dao_active` helper allows you to disable the bridge automation without removing it
 - See the [Day-Ahead documentation](https://github.com/corneel27/day-ahead) for full configuration options
 
