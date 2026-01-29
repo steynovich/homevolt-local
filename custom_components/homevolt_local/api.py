@@ -755,9 +755,7 @@ class HomevoltApi:
 
         return " ".join(parts)
 
-    async def set_schedule(
-        self, entries: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    async def set_schedule(self, entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Replace the current schedule with new entries.
 
         Checks that the device is in local mode before sending commands.

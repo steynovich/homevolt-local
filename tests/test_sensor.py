@@ -1056,9 +1056,9 @@ class TestEmsPredictionSensors:
         }
         for sensor in EMS_SENSORS:
             if sensor.key in prediction_sensor_keys:
-                assert (
-                    sensor.state_class == SensorStateClass.MEASUREMENT
-                ), f"{sensor.key} should have MEASUREMENT state class"
+                assert sensor.state_class == SensorStateClass.MEASUREMENT, (
+                    f"{sensor.key} should have MEASUREMENT state class"
+                )
 
     def test_ems_prediction_power_sensors_have_correct_units(self) -> None:
         """Test EMS prediction power sensors have correct unit and device class."""
@@ -1070,12 +1070,12 @@ class TestEmsPredictionSensors:
         }
         for sensor in EMS_SENSORS:
             if sensor.key in power_sensor_keys:
-                assert (
-                    sensor.native_unit_of_measurement == UnitOfPower.WATT
-                ), f"{sensor.key} should have WATT unit"
-                assert (
-                    sensor.device_class == SensorDeviceClass.POWER
-                ), f"{sensor.key} should have POWER device class"
+                assert sensor.native_unit_of_measurement == UnitOfPower.WATT, (
+                    f"{sensor.key} should have WATT unit"
+                )
+                assert sensor.device_class == SensorDeviceClass.POWER, (
+                    f"{sensor.key} should have POWER device class"
+                )
 
     def test_ems_prediction_energy_sensors_have_correct_units(self) -> None:
         """Test EMS prediction energy sensors have correct unit and device class."""
@@ -1087,12 +1087,12 @@ class TestEmsPredictionSensors:
         }
         for sensor in EMS_SENSORS:
             if sensor.key in energy_sensor_keys:
-                assert (
-                    sensor.native_unit_of_measurement == UnitOfEnergy.WATT_HOUR
-                ), f"{sensor.key} should have WATT_HOUR unit"
-                assert (
-                    sensor.device_class == SensorDeviceClass.ENERGY_STORAGE
-                ), f"{sensor.key} should have ENERGY_STORAGE device class"
+                assert sensor.native_unit_of_measurement == UnitOfEnergy.WATT_HOUR, (
+                    f"{sensor.key} should have WATT_HOUR unit"
+                )
+                assert sensor.device_class == SensorDeviceClass.ENERGY_STORAGE, (
+                    f"{sensor.key} should have ENERGY_STORAGE device class"
+                )
 
     def test_cluster_avail_charge_power_from_aggregated(self, mock_ems_data: dict) -> None:
         """Test avail_charge_power comes from aggregated.ems_prediction, not ems[0]."""
@@ -1339,15 +1339,15 @@ class TestExternalSensorSensors:
         power_sensor_keys = {"grid_power", "solar_power", "load_power"}
         for sensor in EXTERNAL_SENSOR_SENSORS:
             if sensor.key in power_sensor_keys:
-                assert (
-                    sensor.native_unit_of_measurement == UnitOfPower.WATT
-                ), f"{sensor.key} should have WATT unit"
-                assert (
-                    sensor.device_class == SensorDeviceClass.POWER
-                ), f"{sensor.key} should have POWER device class"
-                assert (
-                    sensor.state_class == SensorStateClass.MEASUREMENT
-                ), f"{sensor.key} should have MEASUREMENT state class"
+                assert sensor.native_unit_of_measurement == UnitOfPower.WATT, (
+                    f"{sensor.key} should have WATT unit"
+                )
+                assert sensor.device_class == SensorDeviceClass.POWER, (
+                    f"{sensor.key} should have POWER device class"
+                )
+                assert sensor.state_class == SensorStateClass.MEASUREMENT, (
+                    f"{sensor.key} should have MEASUREMENT state class"
+                )
 
     def test_energy_sensors_have_correct_units(self) -> None:
         """Test energy sensors have correct unit and device class."""
@@ -1363,15 +1363,15 @@ class TestExternalSensorSensors:
         }
         for sensor in EXTERNAL_SENSOR_SENSORS:
             if sensor.key in energy_sensor_keys:
-                assert (
-                    sensor.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
-                ), f"{sensor.key} should have KILO_WATT_HOUR unit"
-                assert (
-                    sensor.device_class == SensorDeviceClass.ENERGY
-                ), f"{sensor.key} should have ENERGY device class"
-                assert (
-                    sensor.state_class == SensorStateClass.TOTAL_INCREASING
-                ), f"{sensor.key} should have TOTAL_INCREASING state class"
+                assert sensor.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR, (
+                    f"{sensor.key} should have KILO_WATT_HOUR unit"
+                )
+                assert sensor.device_class == SensorDeviceClass.ENERGY, (
+                    f"{sensor.key} should have ENERGY device class"
+                )
+                assert sensor.state_class == SensorStateClass.TOTAL_INCREASING, (
+                    f"{sensor.key} should have TOTAL_INCREASING state class"
+                )
 
     def test_rssi_sensors_have_correct_units(self) -> None:
         """Test RSSI sensors have correct unit and device class."""
@@ -1380,25 +1380,26 @@ class TestExternalSensorSensors:
         rssi_sensor_keys = {"grid_rssi", "solar_rssi", "load_rssi"}
         for sensor in EXTERNAL_SENSOR_SENSORS:
             if sensor.key in rssi_sensor_keys:
-                assert (
-                    sensor.native_unit_of_measurement == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-                ), f"{sensor.key} should have dBm unit"
-                assert (
-                    sensor.device_class == SensorDeviceClass.SIGNAL_STRENGTH
-                ), f"{sensor.key} should have SIGNAL_STRENGTH device class"
-                assert (
-                    sensor.entity_category == EntityCategory.DIAGNOSTIC
-                ), f"{sensor.key} should be DIAGNOSTIC category"
+                assert sensor.native_unit_of_measurement == SIGNAL_STRENGTH_DECIBELS_MILLIWATT, (
+                    f"{sensor.key} should have dBm unit"
+                )
+                assert sensor.device_class == SensorDeviceClass.SIGNAL_STRENGTH, (
+                    f"{sensor.key} should have SIGNAL_STRENGTH device class"
+                )
+                assert sensor.entity_category == EntityCategory.DIAGNOSTIC, (
+                    f"{sensor.key} should be DIAGNOSTIC category"
+                )
                 # grid_rssi and solar_rssi are enabled by default, load_rssi is disabled
                 if sensor.key == "load_rssi":
-                    assert (
-                        sensor.entity_registry_enabled_default is False
-                    ), f"{sensor.key} should be disabled by default"
+                    assert sensor.entity_registry_enabled_default is False, (
+                        f"{sensor.key} should be disabled by default"
+                    )
                 else:
-                    # grid_rssi and solar_rssi don't have entity_registry_enabled_default set (defaults to True)
-                    assert (
-                        sensor.entity_registry_enabled_default is not False
-                    ), f"{sensor.key} should be enabled by default"
+                    # grid_rssi/solar_rssi don't set entity_registry_enabled_default
+                    # (defaults to True)
+                    assert sensor.entity_registry_enabled_default is not False, (
+                        f"{sensor.key} should be enabled by default"
+                    )
 
     def test_all_sensors_includes_external_sensors(self) -> None:
         """Test ALL_SENSORS includes EXTERNAL_SENSOR_SENSORS."""

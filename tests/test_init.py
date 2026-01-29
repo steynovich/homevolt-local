@@ -7,7 +7,11 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from custom_components.homevolt_local import validate_iso8601_datetime
+from custom_components.homevolt_local import (
+    SCHEDULE_ENTRY_SCHEMA,
+    SERVICE_SET_SCHEDULE_SCHEMA,
+    validate_iso8601_datetime,
+)
 from custom_components.homevolt_local.api import (
     HomevoltAuthError,
     HomevoltConnectionError,
@@ -61,6 +65,130 @@ class TestValidateIso8601Datetime:
         with pytest.raises(vol.Invalid) as exc_info:
             validate_iso8601_datetime(12345)  # type: ignore[arg-type]
         assert "Expected string" in str(exc_info.value)
+
+
+class TestScheduleEntrySchema:
+    """Tests for SCHEDULE_ENTRY_SCHEMA validation."""
+
+    def test_valid_entry_minimal(self) -> None:
+        """Test valid entry with only required field."""
+        result = SCHEDULE_ENTRY_SCHEMA({"type": 1})
+        assert result["type"] == 1
+
+    def test_valid_entry_all_fields(self) -> None:
+        """Test valid entry with all fields at boundary values."""
+        entry = {
+            "type": 9,
+            "from_time": "2024-01-15T00:00:00",
+            "to_time": "2024-01-15T23:59:59",
+            "min_soc": 0,
+            "max_soc": 100,
+            "setpoint": -25000,
+            "max_charge": 25000,
+            "max_discharge": 25000,
+            "import_limit": -25000,
+            "export_limit": 25000,
+        }
+        result = SCHEDULE_ENTRY_SCHEMA(entry)
+        assert result["setpoint"] == -25000
+        assert result["max_charge"] == 25000
+
+    def test_setpoint_rejects_below_min(self) -> None:
+        """Test setpoint rejects values below -25000."""
+        with pytest.raises(vol.Invalid):
+            SCHEDULE_ENTRY_SCHEMA({"type": 1, "setpoint": -25001})
+
+    def test_setpoint_rejects_above_max(self) -> None:
+        """Test setpoint rejects values above 25000."""
+        with pytest.raises(vol.Invalid):
+            SCHEDULE_ENTRY_SCHEMA({"type": 1, "setpoint": 25001})
+
+    def test_max_charge_rejects_negative(self) -> None:
+        """Test max_charge rejects negative values."""
+        with pytest.raises(vol.Invalid):
+            SCHEDULE_ENTRY_SCHEMA({"type": 1, "max_charge": -1})
+
+    def test_max_charge_rejects_above_max(self) -> None:
+        """Test max_charge rejects values above 25000."""
+        with pytest.raises(vol.Invalid):
+            SCHEDULE_ENTRY_SCHEMA({"type": 1, "max_charge": 25001})
+
+    def test_max_discharge_rejects_negative(self) -> None:
+        """Test max_discharge rejects negative values."""
+        with pytest.raises(vol.Invalid):
+            SCHEDULE_ENTRY_SCHEMA({"type": 1, "max_discharge": -1})
+
+    def test_max_discharge_rejects_above_max(self) -> None:
+        """Test max_discharge rejects values above 25000."""
+        with pytest.raises(vol.Invalid):
+            SCHEDULE_ENTRY_SCHEMA({"type": 1, "max_discharge": 25001})
+
+    def test_import_limit_rejects_below_min(self) -> None:
+        """Test import_limit rejects values below -25000."""
+        with pytest.raises(vol.Invalid):
+            SCHEDULE_ENTRY_SCHEMA({"type": 1, "import_limit": -25001})
+
+    def test_import_limit_rejects_above_max(self) -> None:
+        """Test import_limit rejects values above 25000."""
+        with pytest.raises(vol.Invalid):
+            SCHEDULE_ENTRY_SCHEMA({"type": 1, "import_limit": 25001})
+
+    def test_export_limit_rejects_below_min(self) -> None:
+        """Test export_limit rejects values below -25000."""
+        with pytest.raises(vol.Invalid):
+            SCHEDULE_ENTRY_SCHEMA({"type": 1, "export_limit": -25001})
+
+    def test_export_limit_rejects_above_max(self) -> None:
+        """Test export_limit rejects values above 25000."""
+        with pytest.raises(vol.Invalid):
+            SCHEDULE_ENTRY_SCHEMA({"type": 1, "export_limit": 25001})
+
+
+class TestServiceSetScheduleSchema:
+    """Tests for SERVICE_SET_SCHEDULE_SCHEMA validation."""
+
+    def test_valid_single_entry(self) -> None:
+        """Test valid schema with single entry."""
+        result = SERVICE_SET_SCHEDULE_SCHEMA(
+            {
+                "device_id": "test_device",
+                "schedule": [{"type": 1}],
+            }
+        )
+        assert result["device_id"] == "test_device"
+        assert len(result["schedule"]) == 1
+
+    def test_rejects_empty_schedule(self) -> None:
+        """Test schema rejects empty schedule list."""
+        with pytest.raises(vol.Invalid):
+            SERVICE_SET_SCHEDULE_SCHEMA(
+                {
+                    "device_id": "test_device",
+                    "schedule": [],
+                }
+            )
+
+    def test_rejects_schedule_over_100_entries(self) -> None:
+        """Test schema rejects schedule with more than 100 entries."""
+        entries = [{"type": 1} for _ in range(101)]
+        with pytest.raises(vol.Invalid):
+            SERVICE_SET_SCHEDULE_SCHEMA(
+                {
+                    "device_id": "test_device",
+                    "schedule": entries,
+                }
+            )
+
+    def test_accepts_schedule_with_100_entries(self) -> None:
+        """Test schema accepts schedule with exactly 100 entries."""
+        entries = [{"type": 1} for _ in range(100)]
+        result = SERVICE_SET_SCHEDULE_SCHEMA(
+            {
+                "device_id": "test_device",
+                "schedule": entries,
+            }
+        )
+        assert len(result["schedule"]) == 100
 
 
 async def test_setup_entry_auth_error(
