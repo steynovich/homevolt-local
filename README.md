@@ -422,6 +422,8 @@ automation:
 
 ### Time-of-Use Schedule
 
+> **Note:** Schedule entries must have `from_time` and `to_time` values in the future. Past timestamps will cause an error.
+
 ```yaml
 automation:
   - alias: "Set daily battery schedule"
@@ -434,14 +436,14 @@ automation:
           device_id: <your_device_id>
           schedule:
             - type: 3  # Grid charge during cheap hours
-              from_time: "2024-01-15T02:00:00"
-              to_time: "2024-01-15T06:00:00"
+              from_time: "2028-01-15T02:00:00"
+              to_time: "2028-01-15T06:00:00"
               setpoint: 5000
               max_charge: 5000
               max_soc: 90
             - type: 4  # Grid discharge during peak hours
-              from_time: "2024-01-15T17:00:00"
-              to_time: "2024-01-15T20:00:00"
+              from_time: "2028-01-15T17:00:00"
+              to_time: "2028-01-15T20:00:00"
               setpoint: -3000
               max_discharge: 3000
               min_soc: 20

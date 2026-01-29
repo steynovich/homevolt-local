@@ -68,6 +68,10 @@ class HomevoltNotLocalModeError(HomevoltApiError):
     """Raised when trying to send schedule while not in local mode."""
 
 
+class HomevoltCommandError(HomevoltApiError):
+    """Raised when a device console command fails."""
+
+
 class HomevoltApi:
     """API client for Homevolt Local."""
 
@@ -361,7 +365,20 @@ class HomevoltApi:
                     result = json.loads(response_text)
                     return cast(dict[str, Any], result)
                 except json.JSONDecodeError:
-                    # Device returned non-JSON response (e.g., plain text "OK")
+                    # Device returned non-JSON response - check for command errors
+                    # Error format: "Command '...' returned non-zero error code: 0xN (ERROR)"
+                    if "returned non-zero error code" in response_text:
+                        # Extract error message from lines before the error code line
+                        lines = response_text.strip().split("\n")
+                        error_lines = []
+                        for line in lines:
+                            if "returned non-zero error code" in line:
+                                break
+                            # Skip the command echo line (starts with "esp32>")
+                            if not line.startswith("esp32>"):
+                                error_lines.append(line.strip())
+                        error_msg = " ".join(error_lines).strip() or "Command failed"
+                        raise HomevoltCommandError(error_msg) from None
                     return {"command": command, "output": response_text.strip(), "exit_code": 0}
         except ClientResponseError as err:
             if err.status == 401:

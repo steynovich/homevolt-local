@@ -11,6 +11,7 @@ from custom_components.homevolt_local.api import (
     HomevoltApi,
     HomevoltApiError,
     HomevoltAuthError,
+    HomevoltCommandError,
     HomevoltConnectionError,
     HomevoltNotLocalModeError,
     HomevoltRateLimitError,
@@ -550,6 +551,27 @@ class TestHomevoltApiConsoleCommand:
 
         with pytest.raises(HomevoltConnectionError):
             await api.send_console_command("sched_clear")
+
+    async def test_send_console_command_device_error(
+        self, api: HomevoltApi, mock_session: MagicMock
+    ) -> None:
+        """Test console command raises error when device returns non-zero exit code."""
+        error_response = (
+            "esp32> sched_set 3 --from 2024-01-15T02:00:00 --to 2024-01-15T06:00:00\n"
+            "Missing power setpoint\n"
+            "Command 'sched_set 3 ...' returned non-zero error code: 0x2 (ERROR)"
+        )
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.text = AsyncMock(return_value=error_response)
+        mock_response.raise_for_status = MagicMock()
+
+        mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
+
+        with pytest.raises(HomevoltCommandError) as exc_info:
+            await api.send_console_command("sched_set 3")
+
+        assert "Missing power setpoint" in str(exc_info.value)
 
     async def test_clear_schedule_calls_correct_command(
         self, api: HomevoltApi, mock_session: MagicMock

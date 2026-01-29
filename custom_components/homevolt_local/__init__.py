@@ -17,6 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import (
     HomevoltApi,
     HomevoltAuthError,
+    HomevoltCommandError,
     HomevoltConnectionError,
     HomevoltNotLocalModeError,
     HomevoltRateLimitError,
@@ -631,6 +632,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
                             translation_domain=DOMAIN,
                             translation_key="not_local_mode",
                         ) from err
+                    except HomevoltCommandError as err:
+                        raise HomeAssistantError(str(err)) from err
                     return
 
             _LOGGER.error("No Homevolt config entry found for device %s", device_id)
