@@ -471,12 +471,21 @@ input_select:
   homevolt_dao_mode:
     name: "Day-Ahead Operating Mode"
     options:
-      - "Aan"
-      - "Uit"
+      - "On"
+      - "Off"
 
 input_boolean:
   homevolt_dao_active:
     name: "Day-Ahead Active"
+
+  homevolt_dao_balance:
+    name: "Day-Ahead Balance"
+
+input_datetime:
+  homevolt_dao_stop_inverter:
+    name: "Day-Ahead Stop Inverter"
+    has_date: true
+    has_time: true
 ```
 
 ### Step 2: Configure Day-Ahead
@@ -499,8 +508,10 @@ Add the following battery configuration to Day-Ahead's `options.json`:
     ],
     "entity set power feedin": "input_number.homevolt_dao_power_setpoint",
     "entity set operating mode": "input_select.homevolt_dao_mode",
-    "entity set operating mode on": "Aan",
-    "entity set operating mode off": "Uit"
+    "entity set operating mode on": "On",
+    "entity set operating mode off": "Off",
+    "entity balance switch": "input_boolean.homevolt_dao_balance",
+    "entity stop inverter": "input_datetime.homevolt_dao_stop_inverter"
   }]
 }
 ```
