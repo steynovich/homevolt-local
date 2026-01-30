@@ -424,6 +424,8 @@ automation:
 
 > **Note:** Schedule entries must have `from_time` and `to_time` values in the future. Past timestamps will cause an error.
 
+> **Important:** All timestamps must be in **UTC**. Use templates to convert local times to UTC.
+
 ```yaml
 automation:
   - alias: "Set daily battery schedule"
@@ -435,15 +437,21 @@ automation:
         data:
           device_id: <your_device_id>
           schedule:
-            - type: 3  # Grid charge during cheap hours
-              from_time: "2028-01-15T02:00:00"
-              to_time: "2028-01-15T06:00:00"
+            # Grid charge during cheap hours (02:00-06:00 local time)
+            - type: 3
+              from_time: >-
+                {{ as_timestamp(today_at("02:00")) | timestamp_custom("%Y-%m-%dT%H:%M:%S", false) }}
+              to_time: >-
+                {{ as_timestamp(today_at("06:00")) | timestamp_custom("%Y-%m-%dT%H:%M:%S", false) }}
               setpoint: 5000
               max_charge: 5000
               max_soc: 90
-            - type: 4  # Grid discharge during peak hours
-              from_time: "2028-01-15T17:00:00"
-              to_time: "2028-01-15T20:00:00"
+            # Grid discharge during peak hours (17:00-20:00 local time)
+            - type: 4
+              from_time: >-
+                {{ as_timestamp(today_at("17:00")) | timestamp_custom("%Y-%m-%dT%H:%M:%S", false) }}
+              to_time: >-
+                {{ as_timestamp(today_at("20:00")) | timestamp_custom("%Y-%m-%dT%H:%M:%S", false) }}
               setpoint: -3000
               max_discharge: 3000
               min_soc: 20
