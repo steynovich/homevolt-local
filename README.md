@@ -21,6 +21,8 @@ This integration allows you to monitor and control your Homevolt battery system 
 - English (en)
 - German (de)
 - Dutch (nl)
+- Finnish (fi)
+- French (fr)
 - Norwegian (nb)
 - Swedish (sv)
 

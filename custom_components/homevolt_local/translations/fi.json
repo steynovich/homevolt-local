@@ -1,0 +1,543 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Yhdistä Homevoltiin",
+        "description": "Syötä Homevolt-akkujärjestelmän yhteystiedot.",
+        "data": {
+          "host": "Isäntä",
+          "username": "Käyttäjänimi (valinnainen)",
+          "password": "Salasana (valinnainen)"
+        },
+        "data_description": {
+          "host": "IP-osoite tai isäntänimi (esim. homevolt-12345.local tai 192.168.1.100)",
+          "username": "Vaaditaan vain, jos todennus on käytössä",
+          "password": "Vaaditaan vain, jos todennus on käytössä"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Todenna Homevolt uudelleen",
+        "description": "Syötä uudet tunnistetiedot kohteelle {host}.",
+        "data": {
+          "username": "Käyttäjänimi (valinnainen)",
+          "password": "Salasana (valinnainen)"
+        },
+        "data_description": {
+          "username": "Vaaditaan vain, jos todennus on käytössä",
+          "password": "Vaaditaan vain, jos todennus on käytössä"
+        }
+      },
+      "reconfigure": {
+        "title": "Määritä Homevolt uudelleen",
+        "description": "Päivitä Homevolt-akkujärjestelmän yhteystiedot.",
+        "data": {
+          "host": "Isäntä",
+          "username": "Käyttäjänimi (valinnainen)",
+          "password": "Salasana (valinnainen)"
+        },
+        "data_description": {
+          "host": "IP-osoite tai isäntänimi (esim. homevolt-12345.local tai 192.168.1.100)",
+          "username": "Vaaditaan vain, jos todennus on käytössä",
+          "password": "Vaaditaan vain, jos todennus on käytössä"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Homevolt-laite löydetty",
+        "description": "Homevolt-laite löydettiin osoitteesta {host}. Syötä tunnistetiedot, jos todennus on käytössä.",
+        "data": {
+          "username": "Käyttäjänimi (valinnainen)",
+          "password": "Salasana (valinnainen)"
+        },
+        "data_description": {
+          "username": "Vaaditaan vain, jos todennus on käytössä",
+          "password": "Vaaditaan vain, jos todennus on käytössä"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Yhteys Homevolt-laitteeseen epäonnistui",
+      "invalid_auth": "Virheellinen käyttäjänimi tai salasana",
+      "rate_limited": "Liian monta epäonnistunutta kirjautumisyritystä. Odota 5 minuuttia ja yritä uudelleen",
+      "unknown": "Odottamaton virhe"
+    },
+    "abort": {
+      "already_configured": "Tämä laite on jo määritetty",
+      "reauth_successful": "Uudelleentodennus onnistui",
+      "reconfigure_successful": "Uudelleenmääritys onnistui",
+      "different_device": "Laite tässä osoitteessa on eri kuin alkuperäinen laite"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Yhteyttä kohteeseen {host} ei voida muodostaa"
+    },
+    "invalid_auth": {
+      "message": "Virheelliset tunnistetiedot kohteelle {host}"
+    },
+    "rate_limited": {
+      "message": "Nopeusrajoitus liian monen epäonnistuneen todennusyrityksen vuoksi. Odota 5 minuuttia."
+    },
+    "not_local_mode": {
+      "message": "Aikataulua ei voi asettaa: laite ei ole paikallisessa tilassa. Ota ensin käyttöön 'Paikalliset asetukset' estääksesi Tibberin etämuutokset."
+    }
+  },
+  "services": {
+    "reboot": {
+      "name": "Käynnistä laite uudelleen",
+      "description": "Käynnistä Homevolt-laite uudelleen laitteiston nollauksella. Laite on tilapäisesti poissa käytöstä.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Uudelleenkäynnistettävä Homevolt-laite"
+        }
+      }
+    },
+    "clear_schedule": {
+      "name": "Tyhjennä aikataulu",
+      "description": "Tyhjennä kaikki ajoitetut latausmerkinnät Homevolt-laitteelta",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, jonka aikataulu tyhjennetään"
+        }
+      }
+    },
+    "set_idle": {
+      "name": "Aseta akku valmiustilaan",
+      "description": "Aseta Homevolt-akku valmiustilaan (ei latausta/purkua). Vaatii paikallisen tilan.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, joka asetetaan valmiustilaan"
+        },
+        "offline": {
+          "name": "Offline",
+          "description": "Aseta invertteri offline-tilaan valmiustilassa"
+        }
+      }
+    },
+    "set_charge": {
+      "name": "Aseta akku lataustilaan",
+      "description": "Aseta Homevolt-akku lataustilaan (invertteri lataa verkosta/auringosta). Vaatii paikallisen tilan.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, joka asetetaan lataustilaan"
+        },
+        "setpoint": {
+          "name": "Tehoasetus",
+          "description": "Valinnainen tehoasetus watteina"
+        },
+        "min_soc": {
+          "name": "Minimikäyttöaste",
+          "description": "Valinnainen minimikäyttöaste (%)"
+        },
+        "max_soc": {
+          "name": "Maksimikäyttöaste",
+          "description": "Valinnainen maksimikäyttöaste (%)"
+        }
+      }
+    },
+    "set_discharge": {
+      "name": "Aseta akku purkutilaan",
+      "description": "Aseta Homevolt-akku purkutilaan (invertteri purkaa kotiin/verkkoon). Vaatii paikallisen tilan.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, joka asetetaan purkutilaan"
+        },
+        "setpoint": {
+          "name": "Tehoasetus",
+          "description": "Valinnainen tehoasetus watteina"
+        },
+        "min_soc": {
+          "name": "Minimikäyttöaste",
+          "description": "Valinnainen minimikäyttöaste (%)"
+        },
+        "max_soc": {
+          "name": "Maksimikäyttöaste",
+          "description": "Valinnainen maksimikäyttöaste (%)"
+        }
+      }
+    },
+    "set_grid_charge": {
+      "name": "Aseta akku verkkolataukseen",
+      "description": "Aseta Homevolt-akku verkkolataustilaan (pakotettu lataus verkosta). Vaatii paikallisen tilan.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, joka asetetaan verkkolataukseen"
+        },
+        "setpoint": {
+          "name": "Tehoasetus",
+          "description": "Valinnainen tehoasetus watteina"
+        },
+        "min_soc": {
+          "name": "Minimikäyttöaste",
+          "description": "Valinnainen minimikäyttöaste (%)"
+        },
+        "max_soc": {
+          "name": "Maksimikäyttöaste",
+          "description": "Valinnainen maksimikäyttöaste (%)"
+        }
+      }
+    },
+    "set_grid_discharge": {
+      "name": "Aseta akku verkkopurkuun",
+      "description": "Aseta Homevolt-akku verkkopurkutilaan (pakotettu purku verkkoon). Vaatii paikallisen tilan.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, joka asetetaan verkkopurkuun"
+        },
+        "setpoint": {
+          "name": "Tehoasetus",
+          "description": "Valinnainen tehoasetus watteina"
+        },
+        "min_soc": {
+          "name": "Minimikäyttöaste",
+          "description": "Valinnainen minimikäyttöaste (%)"
+        },
+        "max_soc": {
+          "name": "Maksimikäyttöaste",
+          "description": "Valinnainen maksimikäyttöaste (%)"
+        }
+      }
+    },
+    "set_grid_charge_discharge": {
+      "name": "Aseta akku verkko lataus/purku",
+      "description": "Aseta Homevolt-akku kaksisuuntaiseen verkkotilaan (sallii sekä latauksen verkosta että purun verkkoon). Vaatii paikallisen tilan.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, joka asetetaan verkko lataus/purku -tilaan"
+        },
+        "setpoint": {
+          "name": "Tehoasetus",
+          "description": "Tehoasetus watteina (vaadittu)"
+        },
+        "charge_setpoint": {
+          "name": "Max latausteho",
+          "description": "Valinnainen maksimilatausteho watteina"
+        },
+        "discharge_setpoint": {
+          "name": "Max purkuteho",
+          "description": "Valinnainen maksimipurkuteho watteina"
+        },
+        "min_soc": {
+          "name": "Minimikäyttöaste",
+          "description": "Valinnainen minimikäyttöaste (%)"
+        },
+        "max_soc": {
+          "name": "Maksimikäyttöaste",
+          "description": "Valinnainen maksimikäyttöaste (%)"
+        }
+      }
+    },
+    "set_solar_charge": {
+      "name": "Aseta akku aurinkolataukseen",
+      "description": "Aseta Homevolt-akku aurinkolataustilaan (lataus vain aurinkotuotannosta). Vaatii paikallisen tilan.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, joka asetetaan aurinkolataukseen"
+        },
+        "setpoint": {
+          "name": "Tehoasetus",
+          "description": "Valinnainen tehoasetus watteina"
+        },
+        "min_soc": {
+          "name": "Minimikäyttöaste",
+          "description": "Valinnainen minimikäyttöaste (%)"
+        },
+        "max_soc": {
+          "name": "Maksimikäyttöaste",
+          "description": "Valinnainen maksimikäyttöaste (%)"
+        }
+      }
+    },
+    "set_solar_charge_discharge": {
+      "name": "Aseta akku aurinko lataus/purku",
+      "description": "Aseta Homevolt-akku aurinko lataus/purku -tilaan (aurinkoenergiaan perustuva verkonhallinta). Vaatii paikallisen tilan.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, joka asetetaan aurinko lataus/purku -tilaan"
+        },
+        "setpoint": {
+          "name": "Tehoasetus",
+          "description": "Valinnainen tehoasetus watteina"
+        },
+        "charge_setpoint": {
+          "name": "Max latausteho",
+          "description": "Valinnainen maksimilatausteho watteina"
+        },
+        "discharge_setpoint": {
+          "name": "Max purkuteho",
+          "description": "Valinnainen maksimipurkuteho watteina"
+        },
+        "min_soc": {
+          "name": "Minimikäyttöaste",
+          "description": "Valinnainen minimikäyttöaste (%)"
+        },
+        "max_soc": {
+          "name": "Maksimikäyttöaste",
+          "description": "Valinnainen maksimikäyttöaste (%)"
+        }
+      }
+    },
+    "set_full_solar_export": {
+      "name": "Aseta akku täyteen aurinkovientiin",
+      "description": "Aseta Homevolt-akku täyden aurinkoviennin tilaan (vie kaikki aurinkotuotanto). Vaatii paikallisen tilan.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, joka asetetaan täyteen aurinkovientiin"
+        },
+        "setpoint": {
+          "name": "Tehoasetus",
+          "description": "Valinnainen tehoasetus watteina"
+        },
+        "min_soc": {
+          "name": "Minimikäyttöaste",
+          "description": "Valinnainen minimikäyttöaste (%)"
+        },
+        "max_soc": {
+          "name": "Maksimikäyttöaste",
+          "description": "Valinnainen maksimikäyttöaste (%)"
+        }
+      }
+    },
+    "set_schedule": {
+      "name": "Aseta aikataulu",
+      "description": "Korvaa akun aikataulu merkintälistalla. Vaatii paikallisen tilan.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Homevolt-laite, jolle aikataulu asetetaan"
+        },
+        "schedule": {
+          "name": "Aikataulu",
+          "description": "Lista aikataulumerkinnöistä, joissa tyyppi (0-9), ajat, käyttöasterajat ja tehoasetukset"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "reboot": {
+        "name": "Käynnistä uudelleen"
+      },
+      "clear_schedule": {
+        "name": "Tyhjennä aikataulu"
+      },
+      "set_idle": {
+        "name": "Aseta valmiustilaan"
+      },
+      "set_charge": {
+        "name": "Aseta lataustilaan"
+      },
+      "set_discharge": {
+        "name": "Aseta purkutilaan"
+      },
+      "set_solar_charge": {
+        "name": "Aseta aurinkolataukseen"
+      },
+      "set_full_solar_export": {
+        "name": "Aseta täyteen aurinkovientiin"
+      }
+    },
+    "binary_sensor": {
+      "mqtt_valid": {
+        "name": "MQTT kelvollinen"
+      },
+      "wifi_connected": {
+        "name": "WiFi yhdistetty"
+      },
+      "lte_connected": {
+        "name": "LTE yhdistetty"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "name": "Akun varaustaso"
+      },
+      "battery_power": {
+        "name": "Akun teho"
+      },
+      "grid_power": {
+        "name": "Verkon teho"
+      },
+      "solar_power": {
+        "name": "Aurinkoteho"
+      },
+      "load_power": {
+        "name": "Kuorman teho"
+      },
+      "load_energy_imported": {
+        "name": "Kuorman kuluttama energia"
+      },
+      "load_energy_exported": {
+        "name": "Kuorman viety energia"
+      },
+      "load_rssi": {
+        "name": "Kuorma-anturin signaalivoimakkuus"
+      },
+      "inverter_power": {
+        "name": "Invertterin teho"
+      },
+      "grid_energy_imported": {
+        "name": "Verkosta tuotu energia"
+      },
+      "grid_energy_exported": {
+        "name": "Verkkoon viety energia"
+      },
+      "grid_rssi": {
+        "name": "Verkkoanturin signaalivoimakkuus"
+      },
+      "solar_energy_imported": {
+        "name": "Aurinkoenergia tuotettu"
+      },
+      "solar_energy_exported": {
+        "name": "Aurinkoenergia viety"
+      },
+      "solar_rssi": {
+        "name": "Aurinkoanturin signaalivoimakkuus"
+      },
+      "battery_energy_imported": {
+        "name": "Akkuun ladattu energia"
+      },
+      "battery_energy_exported": {
+        "name": "Akusta purettu energia"
+      },
+      "inverter_energy_produced": {
+        "name": "Invertterin tuottama energia"
+      },
+      "inverter_energy_consumed": {
+        "name": "Invertterin kuluttama energia"
+      },
+      "ems_frequency": {
+        "name": "EMS-taajuus"
+      },
+      "system_temperature": {
+        "name": "Järjestelmän lämpötila"
+      },
+      "available_capacity": {
+        "name": "Käytettävissä oleva kapasiteetti"
+      },
+      "operation_state": {
+        "name": "Käyttötila"
+      },
+      "battery_state": {
+        "name": "Akun tila"
+      },
+      "mains_voltage": {
+        "name": "Verkkojännite"
+      },
+      "mains_frequency": {
+        "name": "Verkkotaajuus"
+      },
+      "uptime": {
+        "name": "Käyttöaika"
+      },
+      "wifi_rssi": {
+        "name": "WiFi-signaalivoimakkuus"
+      },
+      "lte_rssi": {
+        "name": "LTE-signaalivoimakkuus"
+      },
+      "schedule_mode": {
+        "name": "Aikataulu"
+      },
+      "ems_mode": {
+        "name": "EMS-tila"
+      },
+      "rated_power": {
+        "name": "Nimellisteho"
+      },
+      "ota_version": {
+        "name": "OTA-versio"
+      },
+      "firmware_version": {
+        "name": "Laiteohjelmistoversio"
+      },
+      "alarm_messages": {
+        "name": "Hälytysviestit"
+      },
+      "warning_messages": {
+        "name": "Varoitusviestit"
+      },
+      "info_messages": {
+        "name": "Tietoviestit"
+      },
+      "avail_charge_power": {
+        "name": "Käytettävissä oleva latausteho"
+      },
+      "avail_discharge_power": {
+        "name": "Käytettävissä oleva purkuteho"
+      },
+      "avail_charge_energy": {
+        "name": "Käytettävissä oleva latausenergia"
+      },
+      "avail_discharge_energy": {
+        "name": "Käytettävissä oleva purkuenergia"
+      },
+      "avail_inverter_charge_power": {
+        "name": "Käytettävissä oleva invertterin latausteho"
+      },
+      "avail_inverter_discharge_power": {
+        "name": "Käytettävissä oleva invertterin purkuteho"
+      }
+    },
+    "select": {
+      "ledstrip_mode": {
+        "name": "LED-nauhan tila",
+        "state": {
+          "unset": "Ei asetettu",
+          "off": "Pois",
+          "on": "Päällä",
+          "soc": "Varaustaso",
+          "dem": "Kysyntä",
+          "ser": "Huolto"
+        }
+      }
+    },
+    "switch": {
+      "settings_local": {
+        "name": "Paikalliset asetukset"
+      },
+      "ota_enable": {
+        "name": "OTA-päivitykset käytössä"
+      },
+      "ota_enable_esp32": {
+        "name": "OTA-päivitys ESP32"
+      },
+      "ota_enable_hub_web": {
+        "name": "OTA-päivitys hub web"
+      },
+      "ota_enable_bg95_m3": {
+        "name": "OTA-päivitys BG95-M3"
+      }
+    },
+    "number": {
+      "ecu_main_fuse_size_a": {
+        "name": "Pääsulakkeen koko"
+      },
+      "ecu_group_fuse_size_a": {
+        "name": "Ryhmäsulakkeen koko"
+      },
+      "ledstrip_bright_max": {
+        "name": "LED-nauhan max kirkkaus"
+      },
+      "ledstrip_bright_min": {
+        "name": "LED-nauhan min kirkkaus"
+      },
+      "ledstrip_mode_on_hue": {
+        "name": "LED-nauhan sävy"
+      },
+      "ledstrip_mode_on_saturation": {
+        "name": "LED-nauhan kylläisyys"
+      }
+    }
+  }
+}

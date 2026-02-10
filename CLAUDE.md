@@ -34,6 +34,8 @@ ha-homevolt-local/
 │       └── translations/
 │           ├── de.json          # German translations
 │           ├── en.json          # English translations
+│           ├── fi.json          # Finnish translations
+│           ├── fr.json          # French translations
 │           ├── nb.json          # Norwegian translations
 │           ├── nl.json          # Dutch translations
 │           └── sv.json          # Swedish translations

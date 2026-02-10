@@ -12,7 +12,7 @@ STRINGS_PATH = (
     Path(__file__).parent.parent / "custom_components" / "homevolt_local" / "strings.json"
 )
 
-EXPECTED_LANGUAGES = ["de", "en", "nb", "nl", "sv"]
+EXPECTED_LANGUAGES = ["de", "en", "fi", "fr", "nb", "nl", "sv"]
 
 
 def get_all_keys(d: dict, prefix: str = "") -> set[str]:

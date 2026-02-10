@@ -1,0 +1,543 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connexion à Homevolt",
+        "description": "Entrez les informations de connexion pour votre système de batterie Homevolt.",
+        "data": {
+          "host": "Hôte",
+          "username": "Nom d'utilisateur (optionnel)",
+          "password": "Mot de passe (optionnel)"
+        },
+        "data_description": {
+          "host": "Adresse IP ou nom d'hôte (ex. homevolt-12345.local ou 192.168.1.100)",
+          "username": "Requis uniquement si l'authentification est activée",
+          "password": "Requis uniquement si l'authentification est activée"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Réauthentification Homevolt",
+        "description": "Veuillez entrer de nouveaux identifiants pour {host}.",
+        "data": {
+          "username": "Nom d'utilisateur (optionnel)",
+          "password": "Mot de passe (optionnel)"
+        },
+        "data_description": {
+          "username": "Requis uniquement si l'authentification est activée",
+          "password": "Requis uniquement si l'authentification est activée"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurer Homevolt",
+        "description": "Mettez à jour les informations de connexion pour votre système de batterie Homevolt.",
+        "data": {
+          "host": "Hôte",
+          "username": "Nom d'utilisateur (optionnel)",
+          "password": "Mot de passe (optionnel)"
+        },
+        "data_description": {
+          "host": "Adresse IP ou nom d'hôte (ex. homevolt-12345.local ou 192.168.1.100)",
+          "username": "Requis uniquement si l'authentification est activée",
+          "password": "Requis uniquement si l'authentification est activée"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Appareil Homevolt découvert",
+        "description": "Un appareil Homevolt a été découvert à {host}. Entrez les identifiants si l'authentification est activée.",
+        "data": {
+          "username": "Nom d'utilisateur (optionnel)",
+          "password": "Mot de passe (optionnel)"
+        },
+        "data_description": {
+          "username": "Requis uniquement si l'authentification est activée",
+          "password": "Requis uniquement si l'authentification est activée"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter à l'appareil Homevolt",
+      "invalid_auth": "Nom d'utilisateur ou mot de passe invalide",
+      "rate_limited": "Trop de tentatives de connexion échouées. Veuillez attendre 5 minutes et réessayer",
+      "unknown": "Erreur inattendue"
+    },
+    "abort": {
+      "already_configured": "Cet appareil est déjà configuré",
+      "reauth_successful": "Réauthentification réussie",
+      "reconfigure_successful": "Reconfiguration réussie",
+      "different_device": "L'appareil à cette adresse est différent de l'appareil d'origine"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Impossible de se connecter à {host}"
+    },
+    "invalid_auth": {
+      "message": "Identifiants invalides pour {host}"
+    },
+    "rate_limited": {
+      "message": "Limite de débit atteinte suite à trop de tentatives d'authentification échouées. Attendez 5 minutes."
+    },
+    "not_local_mode": {
+      "message": "Impossible de définir le programme : l'appareil n'est pas en mode local. Activez d'abord « Paramètres locaux » pour empêcher les modifications distantes de Tibber."
+    }
+  },
+  "services": {
+    "reboot": {
+      "name": "Redémarrer l'appareil",
+      "description": "Redémarrer l'appareil Homevolt via une réinitialisation matérielle. L'appareil sera temporairement indisponible.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt à redémarrer"
+        }
+      }
+    },
+    "clear_schedule": {
+      "name": "Effacer le programme",
+      "description": "Effacer toutes les entrées de charge programmées sur l'appareil Homevolt",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt dont le programme doit être effacé"
+        }
+      }
+    },
+    "set_idle": {
+      "name": "Mettre la batterie en veille",
+      "description": "Mettre la batterie Homevolt en mode veille (pas de charge/décharge). Nécessite le mode local.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt à mettre en veille"
+        },
+        "offline": {
+          "name": "Hors ligne",
+          "description": "Mettre l'onduleur hors ligne en mode veille"
+        }
+      }
+    },
+    "set_charge": {
+      "name": "Mettre la batterie en charge",
+      "description": "Mettre la batterie Homevolt en mode charge (charge onduleur depuis réseau/solaire). Nécessite le mode local.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt à mettre en charge"
+        },
+        "setpoint": {
+          "name": "Consigne de puissance",
+          "description": "Consigne de puissance optionnelle en watts"
+        },
+        "min_soc": {
+          "name": "Niveau de charge minimum",
+          "description": "Niveau de charge minimum optionnel (%)"
+        },
+        "max_soc": {
+          "name": "Niveau de charge maximum",
+          "description": "Niveau de charge maximum optionnel (%)"
+        }
+      }
+    },
+    "set_discharge": {
+      "name": "Mettre la batterie en décharge",
+      "description": "Mettre la batterie Homevolt en mode décharge (décharge onduleur vers maison/réseau). Nécessite le mode local.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt à mettre en décharge"
+        },
+        "setpoint": {
+          "name": "Consigne de puissance",
+          "description": "Consigne de puissance optionnelle en watts"
+        },
+        "min_soc": {
+          "name": "Niveau de charge minimum",
+          "description": "Niveau de charge minimum optionnel (%)"
+        },
+        "max_soc": {
+          "name": "Niveau de charge maximum",
+          "description": "Niveau de charge maximum optionnel (%)"
+        }
+      }
+    },
+    "set_grid_charge": {
+      "name": "Mettre la batterie en charge réseau",
+      "description": "Mettre la batterie Homevolt en mode charge réseau (charge forcée depuis le réseau). Nécessite le mode local.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt à mettre en charge réseau"
+        },
+        "setpoint": {
+          "name": "Consigne de puissance",
+          "description": "Consigne de puissance optionnelle en watts"
+        },
+        "min_soc": {
+          "name": "Niveau de charge minimum",
+          "description": "Niveau de charge minimum optionnel (%)"
+        },
+        "max_soc": {
+          "name": "Niveau de charge maximum",
+          "description": "Niveau de charge maximum optionnel (%)"
+        }
+      }
+    },
+    "set_grid_discharge": {
+      "name": "Mettre la batterie en décharge réseau",
+      "description": "Mettre la batterie Homevolt en mode décharge réseau (décharge forcée vers le réseau). Nécessite le mode local.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt à mettre en décharge réseau"
+        },
+        "setpoint": {
+          "name": "Consigne de puissance",
+          "description": "Consigne de puissance optionnelle en watts"
+        },
+        "min_soc": {
+          "name": "Niveau de charge minimum",
+          "description": "Niveau de charge minimum optionnel (%)"
+        },
+        "max_soc": {
+          "name": "Niveau de charge maximum",
+          "description": "Niveau de charge maximum optionnel (%)"
+        }
+      }
+    },
+    "set_grid_charge_discharge": {
+      "name": "Mettre la batterie en charge/décharge réseau",
+      "description": "Mettre la batterie Homevolt en mode réseau bidirectionnel (permet la charge depuis et la décharge vers le réseau). Nécessite le mode local.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt à mettre en charge/décharge réseau"
+        },
+        "setpoint": {
+          "name": "Consigne de puissance",
+          "description": "Consigne de puissance en watts (requis)"
+        },
+        "charge_setpoint": {
+          "name": "Puissance de charge max",
+          "description": "Puissance de charge maximale optionnelle en watts"
+        },
+        "discharge_setpoint": {
+          "name": "Puissance de décharge max",
+          "description": "Puissance de décharge maximale optionnelle en watts"
+        },
+        "min_soc": {
+          "name": "Niveau de charge minimum",
+          "description": "Niveau de charge minimum optionnel (%)"
+        },
+        "max_soc": {
+          "name": "Niveau de charge maximum",
+          "description": "Niveau de charge maximum optionnel (%)"
+        }
+      }
+    },
+    "set_solar_charge": {
+      "name": "Mettre la batterie en charge solaire",
+      "description": "Mettre la batterie Homevolt en mode charge solaire (charge uniquement depuis la production solaire). Nécessite le mode local.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt à mettre en charge solaire"
+        },
+        "setpoint": {
+          "name": "Consigne de puissance",
+          "description": "Consigne de puissance optionnelle en watts"
+        },
+        "min_soc": {
+          "name": "Niveau de charge minimum",
+          "description": "Niveau de charge minimum optionnel (%)"
+        },
+        "max_soc": {
+          "name": "Niveau de charge maximum",
+          "description": "Niveau de charge maximum optionnel (%)"
+        }
+      }
+    },
+    "set_solar_charge_discharge": {
+      "name": "Mettre la batterie en charge/décharge solaire",
+      "description": "Mettre la batterie Homevolt en mode charge/décharge solaire (gestion réseau basée sur le solaire). Nécessite le mode local.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt à mettre en charge/décharge solaire"
+        },
+        "setpoint": {
+          "name": "Consigne de puissance",
+          "description": "Consigne de puissance optionnelle en watts"
+        },
+        "charge_setpoint": {
+          "name": "Puissance de charge max",
+          "description": "Puissance de charge maximale optionnelle en watts"
+        },
+        "discharge_setpoint": {
+          "name": "Puissance de décharge max",
+          "description": "Puissance de décharge maximale optionnelle en watts"
+        },
+        "min_soc": {
+          "name": "Niveau de charge minimum",
+          "description": "Niveau de charge minimum optionnel (%)"
+        },
+        "max_soc": {
+          "name": "Niveau de charge maximum",
+          "description": "Niveau de charge maximum optionnel (%)"
+        }
+      }
+    },
+    "set_full_solar_export": {
+      "name": "Mettre la batterie en export solaire total",
+      "description": "Mettre la batterie Homevolt en mode export solaire total (exporter toute la production solaire). Nécessite le mode local.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt à mettre en export solaire total"
+        },
+        "setpoint": {
+          "name": "Consigne de puissance",
+          "description": "Consigne de puissance optionnelle en watts"
+        },
+        "min_soc": {
+          "name": "Niveau de charge minimum",
+          "description": "Niveau de charge minimum optionnel (%)"
+        },
+        "max_soc": {
+          "name": "Niveau de charge maximum",
+          "description": "Niveau de charge maximum optionnel (%)"
+        }
+      }
+    },
+    "set_schedule": {
+      "name": "Définir le programme",
+      "description": "Remplacer le programme de la batterie par une liste d'entrées. Nécessite le mode local.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L'appareil Homevolt pour lequel définir le programme"
+        },
+        "schedule": {
+          "name": "Programme",
+          "description": "Liste d'entrées de programme avec type (0-9), horaires, limites de charge et paramètres de puissance"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "reboot": {
+        "name": "Redémarrer"
+      },
+      "clear_schedule": {
+        "name": "Effacer le programme"
+      },
+      "set_idle": {
+        "name": "Mettre en veille"
+      },
+      "set_charge": {
+        "name": "Mettre en charge"
+      },
+      "set_discharge": {
+        "name": "Mettre en décharge"
+      },
+      "set_solar_charge": {
+        "name": "Mettre en charge solaire"
+      },
+      "set_full_solar_export": {
+        "name": "Mettre en export solaire total"
+      }
+    },
+    "binary_sensor": {
+      "mqtt_valid": {
+        "name": "MQTT valide"
+      },
+      "wifi_connected": {
+        "name": "WiFi connecté"
+      },
+      "lte_connected": {
+        "name": "LTE connecté"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "name": "Niveau de charge batterie"
+      },
+      "battery_power": {
+        "name": "Puissance batterie"
+      },
+      "grid_power": {
+        "name": "Puissance réseau"
+      },
+      "solar_power": {
+        "name": "Puissance solaire"
+      },
+      "load_power": {
+        "name": "Puissance de charge"
+      },
+      "load_energy_imported": {
+        "name": "Énergie consommée par la charge"
+      },
+      "load_energy_exported": {
+        "name": "Énergie exportée par la charge"
+      },
+      "load_rssi": {
+        "name": "Force du signal capteur de charge"
+      },
+      "inverter_power": {
+        "name": "Puissance onduleur"
+      },
+      "grid_energy_imported": {
+        "name": "Énergie importée du réseau"
+      },
+      "grid_energy_exported": {
+        "name": "Énergie exportée vers le réseau"
+      },
+      "grid_rssi": {
+        "name": "Force du signal capteur réseau"
+      },
+      "solar_energy_imported": {
+        "name": "Énergie solaire produite"
+      },
+      "solar_energy_exported": {
+        "name": "Énergie solaire exportée"
+      },
+      "solar_rssi": {
+        "name": "Force du signal capteur solaire"
+      },
+      "battery_energy_imported": {
+        "name": "Énergie chargée batterie"
+      },
+      "battery_energy_exported": {
+        "name": "Énergie déchargée batterie"
+      },
+      "inverter_energy_produced": {
+        "name": "Énergie produite onduleur"
+      },
+      "inverter_energy_consumed": {
+        "name": "Énergie consommée onduleur"
+      },
+      "ems_frequency": {
+        "name": "Fréquence EMS"
+      },
+      "system_temperature": {
+        "name": "Température système"
+      },
+      "available_capacity": {
+        "name": "Capacité disponible"
+      },
+      "operation_state": {
+        "name": "État de fonctionnement"
+      },
+      "battery_state": {
+        "name": "État de la batterie"
+      },
+      "mains_voltage": {
+        "name": "Tension secteur"
+      },
+      "mains_frequency": {
+        "name": "Fréquence secteur"
+      },
+      "uptime": {
+        "name": "Temps de fonctionnement"
+      },
+      "wifi_rssi": {
+        "name": "Force du signal WiFi"
+      },
+      "lte_rssi": {
+        "name": "Force du signal LTE"
+      },
+      "schedule_mode": {
+        "name": "Programme"
+      },
+      "ems_mode": {
+        "name": "Mode EMS"
+      },
+      "rated_power": {
+        "name": "Puissance nominale"
+      },
+      "ota_version": {
+        "name": "Version OTA"
+      },
+      "firmware_version": {
+        "name": "Version du firmware"
+      },
+      "alarm_messages": {
+        "name": "Messages d'alarme"
+      },
+      "warning_messages": {
+        "name": "Messages d'avertissement"
+      },
+      "info_messages": {
+        "name": "Messages d'information"
+      },
+      "avail_charge_power": {
+        "name": "Puissance de charge disponible"
+      },
+      "avail_discharge_power": {
+        "name": "Puissance de décharge disponible"
+      },
+      "avail_charge_energy": {
+        "name": "Énergie de charge disponible"
+      },
+      "avail_discharge_energy": {
+        "name": "Énergie de décharge disponible"
+      },
+      "avail_inverter_charge_power": {
+        "name": "Puissance de charge onduleur disponible"
+      },
+      "avail_inverter_discharge_power": {
+        "name": "Puissance de décharge onduleur disponible"
+      }
+    },
+    "select": {
+      "ledstrip_mode": {
+        "name": "Mode bandeau LED",
+        "state": {
+          "unset": "Non défini",
+          "off": "Éteint",
+          "on": "Allumé",
+          "soc": "Niveau de charge",
+          "dem": "Demande",
+          "ser": "Service"
+        }
+      }
+    },
+    "switch": {
+      "settings_local": {
+        "name": "Paramètres locaux"
+      },
+      "ota_enable": {
+        "name": "Mises à jour OTA activées"
+      },
+      "ota_enable_esp32": {
+        "name": "Mise à jour OTA ESP32"
+      },
+      "ota_enable_hub_web": {
+        "name": "Mise à jour OTA hub web"
+      },
+      "ota_enable_bg95_m3": {
+        "name": "Mise à jour OTA BG95-M3"
+      }
+    },
+    "number": {
+      "ecu_main_fuse_size_a": {
+        "name": "Taille du fusible principal"
+      },
+      "ecu_group_fuse_size_a": {
+        "name": "Taille du fusible de groupe"
+      },
+      "ledstrip_bright_max": {
+        "name": "Luminosité max bandeau LED"
+      },
+      "ledstrip_bright_min": {
+        "name": "Luminosité min bandeau LED"
+      },
+      "ledstrip_mode_on_hue": {
+        "name": "Teinte bandeau LED"
+      },
+      "ledstrip_mode_on_saturation": {
+        "name": "Saturation bandeau LED"
+      }
+    }
+  }
+}
