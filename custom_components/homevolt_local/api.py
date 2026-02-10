@@ -401,6 +401,10 @@ class HomevoltApi:
         """
         return await self.send_console_command("sched_clear")
 
+    async def reboot(self) -> dict[str, Any]:
+        """Reboot the device via hardware reset."""
+        return await self.send_console_command("reset_hard")
+
     async def set_idle(self, offline: bool = False) -> dict[str, Any]:
         """Set battery to idle mode (no charge/discharge).
 

@@ -46,7 +46,14 @@ SERVICE_SET_GRID_CHARGE_DISCHARGE = "set_grid_charge_discharge"
 SERVICE_SET_SOLAR_CHARGE = "set_solar_charge"
 SERVICE_SET_SOLAR_CHARGE_DISCHARGE = "set_solar_charge_discharge"
 SERVICE_SET_FULL_SOLAR_EXPORT = "set_full_solar_export"
+SERVICE_REBOOT = "reboot"
 SERVICE_SET_SCHEDULE = "set_schedule"
+
+SERVICE_REBOOT_SCHEMA = vol.Schema(
+    {
+        vol.Required("device_id"): cv.string,
+    }
+)
 
 SERVICE_CLEAR_SCHEDULE_SCHEMA = vol.Schema(
     {
@@ -643,6 +650,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             SERVICE_SET_SCHEDULE,
             async_set_schedule,
             schema=SERVICE_SET_SCHEDULE_SCHEMA,
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_REBOOT):
+
+        async def async_reboot(call: ServiceCall) -> None:
+            """Handle the reboot service call."""
+            device_id = call.data["device_id"]
+            device_registry = dr.async_get(hass)
+            device_entry = device_registry.async_get(device_id)
+
+            if device_entry is None:
+                _LOGGER.error("Device %s not found", device_id)
+                return
+
+            # Find the config entry for this device
+            for config_entry_id in device_entry.config_entries:
+                config_entry = hass.config_entries.async_get_entry(config_entry_id)
+                if config_entry and config_entry.domain == DOMAIN:
+                    coord: HomevoltCoordinator = config_entry.runtime_data
+                    await coord.api.reboot()
+                    return
+
+            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_REBOOT,
+            async_reboot,
+            schema=SERVICE_REBOOT_SCHEMA,
         )
 
     return True

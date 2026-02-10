@@ -1,3 +1,15 @@
+reboot:
+  name: Reboot device
+  description: Reboot the Homevolt device via hardware reset. The device will be temporarily unavailable.
+  fields:
+    device_id:
+      name: Device
+      description: The Homevolt device to reboot
+      required: true
+      selector:
+        device:
+          integration: homevolt_local
+
 clear_schedule:
   name: Clear schedule
   description: Clear all scheduled charging entries on the Homevolt device

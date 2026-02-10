@@ -1,6 +1,9 @@
 {
   "entity": {
     "button": {
+      "reboot": {
+        "default": "mdi:restart"
+      },
       "clear_schedule": {
         "default": "mdi:calendar-remove"
       }

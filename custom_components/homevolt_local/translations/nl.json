@@ -82,6 +82,16 @@
     }
   },
   "services": {
+    "reboot": {
+      "name": "Apparaat herstarten",
+      "description": "Start het Homevolt-apparaat opnieuw op via hardware-reset. Het apparaat is tijdelijk niet beschikbaar.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het Homevolt-apparaat dat herstart moet worden"
+        }
+      }
+    },
     "clear_schedule": {
       "name": "Schema wissen",
       "description": "Alle geplande laadschema's op het Homevolt-apparaat wissen",
@@ -315,6 +325,9 @@
   },
   "entity": {
     "button": {
+      "reboot": {
+        "name": "Herstarten"
+      },
       "clear_schedule": {
         "name": "Schema wissen"
       },

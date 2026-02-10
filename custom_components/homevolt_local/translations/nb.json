@@ -82,6 +82,16 @@
     }
   },
   "services": {
+    "reboot": {
+      "name": "Start enhet på nytt",
+      "description": "Start Homevolt-enheten på nytt via maskinvare-reset. Enheten vil være midlertidig utilgjengelig.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som skal startes på nytt"
+        }
+      }
+    },
     "clear_schedule": {
       "name": "Slett tidsplan",
       "description": "Slett alle planlagte ladeoppføringer på Homevolt-enheten",
@@ -315,6 +325,9 @@
   },
   "entity": {
     "button": {
+      "reboot": {
+        "name": "Omstart"
+      },
       "clear_schedule": {
         "name": "Slett tidsplan"
       },

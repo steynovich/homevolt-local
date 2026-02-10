@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,6 +36,7 @@ async def async_setup_entry(
             HomevoltSetDischargeButton(coordinator),
             HomevoltSetSolarChargeButton(coordinator),
             HomevoltSetFullSolarExportButton(coordinator),
+            HomevoltRebootButton(coordinator),
         ]
     )
 
@@ -152,3 +153,22 @@ class HomevoltSetFullSolarExportButton(CoordinatorEntity[HomevoltCoordinator], B
         """Handle button press to set battery to full solar export mode."""
         await self.coordinator.api.set_full_solar_export()
         await self.coordinator.async_request_refresh()
+
+
+class HomevoltRebootButton(CoordinatorEntity[HomevoltCoordinator], ButtonEntity):
+    """Button to reboot the Homevolt device via hardware reset."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "reboot"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = ButtonDeviceClass.RESTART
+
+    def __init__(self, coordinator: HomevoltCoordinator) -> None:
+        """Initialize the button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device_id}_reboot"
+        self._attr_device_info = get_ecu_device_info(coordinator)
+
+    async def async_press(self) -> None:
+        """Handle button press to reboot the device."""
+        await self.coordinator.api.reboot()

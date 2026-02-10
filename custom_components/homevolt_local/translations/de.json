@@ -82,6 +82,16 @@
     }
   },
   "services": {
+    "reboot": {
+      "name": "Gerät neu starten",
+      "description": "Das Homevolt-Gerät per Hardware-Reset neu starten. Das Gerät ist vorübergehend nicht verfügbar.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Homevolt-Gerät, das neu gestartet werden soll"
+        }
+      }
+    },
     "clear_schedule": {
       "name": "Zeitplan löschen",
       "description": "Alle geplanten Ladeeinträge auf dem Homevolt-Gerät löschen",
@@ -315,6 +325,9 @@
   },
   "entity": {
     "button": {
+      "reboot": {
+        "name": "Neustart"
+      },
       "clear_schedule": {
         "name": "Zeitplan löschen"
       },

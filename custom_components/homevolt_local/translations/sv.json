@@ -82,6 +82,16 @@
     }
   },
   "services": {
+    "reboot": {
+      "name": "Starta om enhet",
+      "description": "Starta om Homevolt-enheten via maskinvaru-reset. Enheten kommer att vara tillfälligt otillgänglig.",
+      "fields": {
+        "device_id": {
+          "name": "Enhet",
+          "description": "Homevolt-enheten som ska startas om"
+        }
+      }
+    },
     "clear_schedule": {
       "name": "Rensa schema",
       "description": "Rensa alla schemalagda laddningsposter på Homevolt-enheten",
@@ -315,6 +325,9 @@
   },
   "entity": {
     "button": {
+      "reboot": {
+        "name": "Omstart"
+      },
       "clear_schedule": {
         "name": "Rensa schema"
       },
