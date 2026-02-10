@@ -109,6 +109,15 @@ ha-homevolt-local/
 - **LED Strip Hue**: 0-360°
 - **LED Strip Saturation**: 0-100%
 
+### Buttons
+- **Clear Schedule**: Clear all scheduled entries (config)
+- **Set Idle**: Set battery to idle mode (config)
+- **Set Charge**: Set battery to charge mode (config)
+- **Set Discharge**: Set battery to discharge mode (config)
+- **Set Solar Charge**: Charge from solar only (config)
+- **Set Full Solar Export**: Export all solar production (config)
+- **Reboot**: Hardware reset of the device (diagnostic, restart device class) — does not require local mode
+
 ### Selects (Configuration)
 - **LED Strip Mode**: off, on, soc, dem, ser (shows "Unset" when empty)
 
@@ -213,7 +222,7 @@ ruff format .
 - ✅ integration-owner: @steynovich
 - ✅ parallel-updates: `PARALLEL_UPDATES = 1`
 - ✅ reauthentication-flow: `async_step_reauth` for credential updates
-- ✅ test-coverage: 90%+ (131 tests)
+- ✅ test-coverage: 90%+ (498 tests)
 - ✅ config-entry-unloading: Clean unload with coordinator cancellation
 - ✅ entity-unavailable: Sensors unavailable when data missing
 - ✅ log-when-unavailable: Debug logging on update failures

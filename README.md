@@ -170,14 +170,15 @@ If your Homevolt device broadcasts mDNS (hostname starting with `homevolt`), Hom
 
 ### Buttons
 
-| Button | Description |
-|--------|-------------|
-| Clear Schedule | Clear all scheduled entries |
-| Set Idle | Set battery to idle mode |
-| Set Charge | Set battery to charge mode |
-| Set Discharge | Set battery to discharge mode |
-| Set Solar Charge | Charge from solar only |
-| Set Full Solar Export | Export all solar production |
+| Button | Description | Category |
+|--------|-------------|----------|
+| Clear Schedule | Clear all scheduled entries | Config |
+| Set Idle | Set battery to idle mode | Config |
+| Set Charge | Set battery to charge mode | Config |
+| Set Discharge | Set battery to discharge mode | Config |
+| Set Solar Charge | Charge from solar only | Config |
+| Set Full Solar Export | Export all solar production | Config |
+| Reboot | Hardware reset of the device | Diagnostic |
 
 ## Sensor Data Sources
 
@@ -228,7 +229,7 @@ The Schedule Mode sensor also exposes extra state attributes:
 
 ## Services
 
-The integration provides services to control battery charging modes. **All services require local mode to be enabled** on the device first (via the "Settings local" switch).
+The integration provides services to control battery charging modes. **Battery control services require local mode to be enabled** on the device first (via the "Settings local" switch). The reboot service does not require local mode.
 
 ### Available Services
 
@@ -245,6 +246,7 @@ The integration provides services to control battery charging modes. **All servi
 | `homevolt_local.set_solar_charge_discharge` | Solar-based grid management |
 | `homevolt_local.set_full_solar_export` | Export all solar production |
 | `homevolt_local.set_schedule` | Replace battery schedule with a list of entries |
+| `homevolt_local.reboot` | Reboot the device via hardware reset |
 
 ### Service Parameters
 
@@ -294,6 +296,9 @@ The integration provides services to control battery charging modes. **All servi
   - `export_limit` (optional): Grid export limit in watts
 
 > **Note:** The first entry in the schedule replaces all existing entries. Subsequent entries are added to the schedule.
+
+**reboot:**
+- No additional parameters. The device will be temporarily unavailable after rebooting.
 
 ### Example Service Call
 
