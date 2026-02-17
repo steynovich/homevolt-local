@@ -1,5 +1,7 @@
 """Tests for Homevolt Local sensor platform."""
 
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
@@ -17,6 +19,8 @@ from custom_components.homevolt_local.sensor import (
     EMS_MODE_SENSORS,
     EMS_SENSORS,
     EXTERNAL_SENSOR_SENSORS,
+    HomevoltSensor,
+    HomevoltSensorEntityDescription,
     MAINS_SENSORS,
     OTA_SENSORS,
     PARALLEL_UPDATES,
@@ -1413,3 +1417,148 @@ class TestExternalSensorSensors:
             + len(EXTERNAL_SENSOR_SENSORS)
         )
         assert len(ALL_SENSORS) == expected
+
+
+class TestTotalIncreasingProtection:
+    """Test that TOTAL_INCREASING sensors suppress value decreases.
+
+    When a cluster member goes offline, aggregated energy totals drop
+    because that unit's contribution is missing. Without protection,
+    HA interprets the drop as a counter reset and the recovery as
+    massive new energy, corrupting statistics.
+    """
+
+    @pytest.fixture
+    def mock_coordinator(self) -> MagicMock:
+        """Return a mock coordinator."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.cluster_id = "test123_cluster"
+        coordinator.is_leader = True
+        return coordinator
+
+    @pytest.fixture
+    def energy_consumed_description(self) -> HomevoltSensorEntityDescription:
+        """Return the inverter_energy_consumed sensor description."""
+        return next(s for s in EMS_SENSORS if s.key == "inverter_energy_consumed")
+
+    @pytest.fixture
+    def battery_soc_description(self) -> HomevoltSensorEntityDescription:
+        """Return the battery_soc sensor description (MEASUREMENT, not TOTAL_INCREASING)."""
+        return next(s for s in EMS_SENSORS if s.key == "battery_soc")
+
+    def _make_sensor(
+        self,
+        coordinator: MagicMock,
+        description: HomevoltSensorEntityDescription,
+        device_type: DeviceType = DeviceType.CLUSTER,
+    ) -> HomevoltSensor:
+        """Create a HomevoltSensor with mocked coordinator."""
+        with patch.object(HomevoltSensor, "__init__", lambda self, *a, **kw: None):
+            sensor = HomevoltSensor.__new__(HomevoltSensor)
+        sensor.coordinator = coordinator
+        sensor.entity_description = description
+        sensor._device_type = device_type
+        sensor._last_valid_value = None
+        sensor._attr_unique_id = f"{coordinator.cluster_id}_{description.key}"
+        return sensor
+
+    def test_suppresses_value_decrease(
+        self, mock_coordinator: MagicMock, energy_consumed_description: HomevoltSensorEntityDescription
+    ) -> None:
+        """Test that a value decrease on TOTAL_INCREASING returns None."""
+        sensor = self._make_sensor(mock_coordinator, energy_consumed_description)
+
+        # First reading: 16000 kWh (all units reporting)
+        mock_coordinator.data = {
+            "ems": {"ems": [{"ems_data": {"energy_consumed": 16000000}}], "aggregated": {}}
+        }
+        sensor._last_valid_value = 16000.0
+
+        # Second reading: 8000 kWh (one unit dropped out)
+        with patch.object(type(sensor), "_get_data", return_value={
+            "ems": [{"ems_data": {"energy_consumed": 8000000}}]
+        }):
+            value = sensor.native_value
+        assert value is None  # Suppressed
+
+    def test_allows_value_increase(
+        self, mock_coordinator: MagicMock, energy_consumed_description: HomevoltSensorEntityDescription
+    ) -> None:
+        """Test that a value increase on TOTAL_INCREASING is accepted."""
+        sensor = self._make_sensor(mock_coordinator, energy_consumed_description)
+        sensor._last_valid_value = 16000.0
+
+        # Value increased
+        with patch.object(type(sensor), "_get_data", return_value={
+            "ems": [{"ems_data": {"energy_consumed": 17000000}}]
+        }):
+            value = sensor.native_value
+        assert value == 17000.0
+        assert sensor._last_valid_value == 17000.0
+
+    def test_accepts_first_value(
+        self, mock_coordinator: MagicMock, energy_consumed_description: HomevoltSensorEntityDescription
+    ) -> None:
+        """Test that the first value is always accepted (no previous to compare)."""
+        sensor = self._make_sensor(mock_coordinator, energy_consumed_description)
+        assert sensor._last_valid_value is None
+
+        with patch.object(type(sensor), "_get_data", return_value={
+            "ems": [{"ems_data": {"energy_consumed": 8000000}}]
+        }):
+            value = sensor.native_value
+        assert value == 8000.0
+        assert sensor._last_valid_value == 8000.0
+
+    def test_recovers_after_suppression(
+        self, mock_coordinator: MagicMock, energy_consumed_description: HomevoltSensorEntityDescription
+    ) -> None:
+        """Test that value recovers correctly after suppression."""
+        sensor = self._make_sensor(mock_coordinator, energy_consumed_description)
+        sensor._last_valid_value = 16000.0
+
+        # Drop (suppressed)
+        with patch.object(type(sensor), "_get_data", return_value={
+            "ems": [{"ems_data": {"energy_consumed": 8000000}}]
+        }):
+            value = sensor.native_value
+        assert value is None
+        assert sensor._last_valid_value == 16000.0  # Unchanged
+
+        # Recovery - value exceeds last valid
+        with patch.object(type(sensor), "_get_data", return_value={
+            "ems": [{"ems_data": {"energy_consumed": 16500000}}]
+        }):
+            value = sensor.native_value
+        assert value == 16500.0
+        assert sensor._last_valid_value == 16500.0
+
+    def test_measurement_sensor_not_affected(
+        self, mock_coordinator: MagicMock, battery_soc_description: HomevoltSensorEntityDescription
+    ) -> None:
+        """Test that MEASUREMENT sensors are not affected by decrease protection."""
+        sensor = self._make_sensor(mock_coordinator, battery_soc_description)
+        sensor._last_valid_value = 75.0
+
+        # SOC decrease is normal (battery discharging), should not be suppressed
+        with patch.object(type(sensor), "_get_data", return_value={
+            "ems": [{"ems_data": {"soc_avg": 7000}}]
+        }):
+            value = sensor.native_value
+        assert value == 70.0  # Not suppressed
+
+    def test_none_value_not_tracked(
+        self, mock_coordinator: MagicMock, energy_consumed_description: HomevoltSensorEntityDescription
+    ) -> None:
+        """Test that None values don't update _last_valid_value."""
+        sensor = self._make_sensor(mock_coordinator, energy_consumed_description)
+        sensor._last_valid_value = 16000.0
+
+        # API returns None (missing data)
+        with patch.object(type(sensor), "_get_data", return_value={
+            "ems": [{"ems_data": {}}]
+        }):
+            value = sensor.native_value
+        assert value is None
+        assert sensor._last_valid_value == 16000.0  # Unchanged

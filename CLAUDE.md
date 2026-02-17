@@ -129,6 +129,7 @@ ha-homevolt-local/
 - **Automatic availability**: Become available when data appears (no reload needed)
 - **Entity categories**: CONFIG for settings, DIAGNOSTIC for system info
 - **External sensor detection**: Grid/Solar/Load sensors only created on ECU devices when detected in API data
+- **TOTAL_INCREASING decrease protection**: Energy sensors (`TOTAL_INCREASING` state class) suppress value decreases by returning `None` (unavailable). This prevents HA statistics corruption when a cluster member goes temporarily offline, causing aggregated energy totals to drop. The sensor recovers automatically once the value exceeds the last valid reading.
 
 ## Response Format Compatibility
 

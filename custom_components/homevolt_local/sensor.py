@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -31,6 +32,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import HomevoltConfigEntry
 from .coordinator import HomevoltCoordinator
 from .device import DeviceType, get_cluster_device_info, get_ecu_device_info
+
+_LOGGER = logging.getLogger(__name__)
 
 # Limit parallel updates to avoid overwhelming the device
 PARALLEL_UPDATES = 1
@@ -800,6 +803,7 @@ class HomevoltSensor(CoordinatorEntity[HomevoltCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._device_type = device_type
+        self._last_valid_value: float | int | None = None
 
         if device_type == DeviceType.CLUSTER:
             self._attr_unique_id = f"{coordinator.cluster_id}_{description.key}"
@@ -828,7 +832,30 @@ class HomevoltSensor(CoordinatorEntity[HomevoltCoordinator], SensorEntity):
     @property
     def native_value(self) -> Any:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._get_data())
+        value = self.entity_description.value_fn(self._get_data())
+
+        # For TOTAL_INCREASING sensors, suppress value decreases to prevent
+        # false reset detection and statistics corruption in HA.
+        # This happens when a cluster member is temporarily unavailable,
+        # causing aggregated totals to drop temporarily.
+        if (
+            self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING
+            and self._last_valid_value is not None
+            and isinstance(value, (int, float))
+            and value < self._last_valid_value
+        ):
+            _LOGGER.debug(
+                "Suppressing decrease for %s: %s < last valid %s",
+                self.entity_description.key,
+                value,
+                self._last_valid_value,
+            )
+            return None
+
+        if isinstance(value, (int, float)):
+            self._last_valid_value = value
+
+        return value
 
     @property
     def icon(self) -> str | None:
