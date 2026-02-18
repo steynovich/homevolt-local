@@ -490,7 +490,7 @@ class TestHomevoltSetGridChargeButton:
 
         await button.async_press()
 
-        coordinator.api.set_grid_charge.assert_called_once()
+        coordinator.api.set_grid_charge.assert_called_once_with(setpoint=0)
         coordinator.async_request_refresh.assert_called_once()
 
 
@@ -563,7 +563,7 @@ class TestHomevoltSetGridDischargeButton:
 
         await button.async_press()
 
-        coordinator.api.set_grid_discharge.assert_called_once()
+        coordinator.api.set_grid_discharge.assert_called_once_with(setpoint=0)
         coordinator.async_request_refresh.assert_called_once()
 
 
@@ -636,7 +636,7 @@ class TestHomevoltSetGridChargeDischargeButton:
 
         await button.async_press()
 
-        coordinator.api.set_grid_charge_discharge.assert_called_once()
+        coordinator.api.set_grid_charge_discharge.assert_called_once_with(setpoint=0)
         coordinator.async_request_refresh.assert_called_once()
 
 

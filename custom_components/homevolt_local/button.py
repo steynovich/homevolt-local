@@ -135,7 +135,7 @@ class HomevoltSetGridChargeButton(CoordinatorEntity[HomevoltCoordinator], Button
 
     async def async_press(self) -> None:
         """Handle button press to set battery to grid charge mode."""
-        await self.coordinator.api.set_grid_charge()
+        await self.coordinator.api.set_grid_charge(setpoint=0)
         await self.coordinator.async_request_refresh()
 
 
@@ -154,7 +154,7 @@ class HomevoltSetGridDischargeButton(CoordinatorEntity[HomevoltCoordinator], But
 
     async def async_press(self) -> None:
         """Handle button press to set battery to grid discharge mode."""
-        await self.coordinator.api.set_grid_discharge()
+        await self.coordinator.api.set_grid_discharge(setpoint=0)
         await self.coordinator.async_request_refresh()
 
 
@@ -173,7 +173,7 @@ class HomevoltSetGridChargeDischargeButton(CoordinatorEntity[HomevoltCoordinator
 
     async def async_press(self) -> None:
         """Handle button press to set battery to grid charge/discharge mode."""
-        await self.coordinator.api.set_grid_charge_discharge()
+        await self.coordinator.api.set_grid_charge_discharge(setpoint=0)
         await self.coordinator.async_request_refresh()
 
 
