@@ -340,6 +340,15 @@
       "set_discharge": {
         "name": "Mettre en décharge"
       },
+      "set_grid_charge": {
+        "name": "Mettre en charge réseau"
+      },
+      "set_grid_discharge": {
+        "name": "Mettre en décharge réseau"
+      },
+      "set_grid_charge_discharge": {
+        "name": "Mettre en charge/décharge réseau"
+      },
       "set_solar_charge": {
         "name": "Mettre en charge solaire"
       },

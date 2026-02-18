@@ -340,6 +340,15 @@
       "set_discharge": {
         "name": "Set discharge"
       },
+      "set_grid_charge": {
+        "name": "Set grid charge"
+      },
+      "set_grid_discharge": {
+        "name": "Set grid discharge"
+      },
+      "set_grid_charge_discharge": {
+        "name": "Set grid charge/discharge"
+      },
       "set_solar_charge": {
         "name": "Set solar charge"
       },

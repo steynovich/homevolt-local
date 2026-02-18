@@ -116,6 +116,9 @@ ha-homevolt-local/
 - **Set Idle**: Set battery to idle mode (config)
 - **Set Charge**: Set battery to charge mode (config)
 - **Set Discharge**: Set battery to discharge mode (config)
+- **Set Grid Charge**: Force charge from grid (config)
+- **Set Grid Discharge**: Force discharge to grid (config)
+- **Set Grid Charge/Discharge**: Bidirectional grid control (config)
 - **Set Solar Charge**: Charge from solar only (config)
 - **Set Full Solar Export**: Export all solar production (config)
 - **Reboot**: Hardware reset of the device (diagnostic, restart device class) — does not require local mode

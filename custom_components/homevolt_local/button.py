@@ -34,6 +34,9 @@ async def async_setup_entry(
             HomevoltSetIdleButton(coordinator),
             HomevoltSetChargeButton(coordinator),
             HomevoltSetDischargeButton(coordinator),
+            HomevoltSetGridChargeButton(coordinator),
+            HomevoltSetGridDischargeButton(coordinator),
+            HomevoltSetGridChargeDischargeButton(coordinator),
             HomevoltSetSolarChargeButton(coordinator),
             HomevoltSetFullSolarExportButton(coordinator),
             HomevoltRebootButton(coordinator),
@@ -114,6 +117,63 @@ class HomevoltSetDischargeButton(CoordinatorEntity[HomevoltCoordinator], ButtonE
     async def async_press(self) -> None:
         """Handle button press to set battery to discharge mode."""
         await self.coordinator.api.set_discharge()
+        await self.coordinator.async_request_refresh()
+
+
+class HomevoltSetGridChargeButton(CoordinatorEntity[HomevoltCoordinator], ButtonEntity):
+    """Button to set the Homevolt battery to grid charge mode."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "set_grid_charge"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, coordinator: HomevoltCoordinator) -> None:
+        """Initialize the button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device_id}_set_grid_charge"
+        self._attr_device_info = get_ecu_device_info(coordinator)
+
+    async def async_press(self) -> None:
+        """Handle button press to set battery to grid charge mode."""
+        await self.coordinator.api.set_grid_charge()
+        await self.coordinator.async_request_refresh()
+
+
+class HomevoltSetGridDischargeButton(CoordinatorEntity[HomevoltCoordinator], ButtonEntity):
+    """Button to set the Homevolt battery to grid discharge mode."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "set_grid_discharge"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, coordinator: HomevoltCoordinator) -> None:
+        """Initialize the button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device_id}_set_grid_discharge"
+        self._attr_device_info = get_ecu_device_info(coordinator)
+
+    async def async_press(self) -> None:
+        """Handle button press to set battery to grid discharge mode."""
+        await self.coordinator.api.set_grid_discharge()
+        await self.coordinator.async_request_refresh()
+
+
+class HomevoltSetGridChargeDischargeButton(CoordinatorEntity[HomevoltCoordinator], ButtonEntity):
+    """Button to set the Homevolt battery to grid charge/discharge mode."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "set_grid_charge_discharge"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, coordinator: HomevoltCoordinator) -> None:
+        """Initialize the button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device_id}_set_grid_charge_discharge"
+        self._attr_device_info = get_ecu_device_info(coordinator)
+
+    async def async_press(self) -> None:
+        """Handle button press to set battery to grid charge/discharge mode."""
+        await self.coordinator.api.set_grid_charge_discharge()
         await self.coordinator.async_request_refresh()
 
 

@@ -340,6 +340,15 @@
       "set_discharge": {
         "name": "Aseta purkutilaan"
       },
+      "set_grid_charge": {
+        "name": "Aseta verkkolataukseen"
+      },
+      "set_grid_discharge": {
+        "name": "Aseta verkkopurkuun"
+      },
+      "set_grid_charge_discharge": {
+        "name": "Aseta verkkolataus/-purkuun"
+      },
       "set_solar_charge": {
         "name": "Aseta aurinkolataukseen"
       },

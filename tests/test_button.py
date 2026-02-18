@@ -12,6 +12,9 @@ from custom_components.homevolt_local.button import (
     HomevoltRebootButton,
     HomevoltSetChargeButton,
     HomevoltSetDischargeButton,
+    HomevoltSetGridChargeButton,
+    HomevoltSetGridChargeDischargeButton,
+    HomevoltSetGridDischargeButton,
     HomevoltSetIdleButton,
 )
 
@@ -415,6 +418,225 @@ class TestHomevoltSetDischargeButton:
         await button.async_press()
 
         coordinator.api.set_discharge.assert_called_once()
+        coordinator.async_request_refresh.assert_called_once()
+
+
+class TestHomevoltSetGridChargeButton:
+    """Test HomevoltSetGridChargeButton entity."""
+
+    def test_button_has_entity_name(self) -> None:
+        """Test button has _attr_has_entity_name set."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridChargeButton(coordinator)
+
+        assert button._attr_has_entity_name is True
+
+    def test_button_translation_key(self) -> None:
+        """Test button has correct translation_key."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridChargeButton(coordinator)
+
+        assert button._attr_translation_key == "set_grid_charge"
+
+    def test_button_entity_category(self) -> None:
+        """Test button has CONFIG entity category."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridChargeButton(coordinator)
+
+        assert button._attr_entity_category == EntityCategory.CONFIG
+
+    def test_button_unique_id(self) -> None:
+        """Test button unique_id is correctly set."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridChargeButton(coordinator)
+
+        assert button.unique_id == "test123_set_grid_charge"
+
+    @pytest.mark.asyncio
+    async def test_async_press_calls_api(self) -> None:
+        """Test async_press calls the API set_grid_charge method."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+        coordinator.api = MagicMock()
+        coordinator.api.set_grid_charge = AsyncMock(
+            return_value={"command": "sched_set 3", "output": "OK", "exit_code": 0}
+        )
+        coordinator.async_request_refresh = AsyncMock()
+
+        button = HomevoltSetGridChargeButton(coordinator)
+
+        await button.async_press()
+
+        coordinator.api.set_grid_charge.assert_called_once()
+        coordinator.async_request_refresh.assert_called_once()
+
+
+class TestHomevoltSetGridDischargeButton:
+    """Test HomevoltSetGridDischargeButton entity."""
+
+    def test_button_has_entity_name(self) -> None:
+        """Test button has _attr_has_entity_name set."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridDischargeButton(coordinator)
+
+        assert button._attr_has_entity_name is True
+
+    def test_button_translation_key(self) -> None:
+        """Test button has correct translation_key."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridDischargeButton(coordinator)
+
+        assert button._attr_translation_key == "set_grid_discharge"
+
+    def test_button_entity_category(self) -> None:
+        """Test button has CONFIG entity category."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridDischargeButton(coordinator)
+
+        assert button._attr_entity_category == EntityCategory.CONFIG
+
+    def test_button_unique_id(self) -> None:
+        """Test button unique_id is correctly set."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridDischargeButton(coordinator)
+
+        assert button.unique_id == "test123_set_grid_discharge"
+
+    @pytest.mark.asyncio
+    async def test_async_press_calls_api(self) -> None:
+        """Test async_press calls the API set_grid_discharge method."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+        coordinator.api = MagicMock()
+        coordinator.api.set_grid_discharge = AsyncMock(
+            return_value={"command": "sched_set 4", "output": "OK", "exit_code": 0}
+        )
+        coordinator.async_request_refresh = AsyncMock()
+
+        button = HomevoltSetGridDischargeButton(coordinator)
+
+        await button.async_press()
+
+        coordinator.api.set_grid_discharge.assert_called_once()
+        coordinator.async_request_refresh.assert_called_once()
+
+
+class TestHomevoltSetGridChargeDischargeButton:
+    """Test HomevoltSetGridChargeDischargeButton entity."""
+
+    def test_button_has_entity_name(self) -> None:
+        """Test button has _attr_has_entity_name set."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridChargeDischargeButton(coordinator)
+
+        assert button._attr_has_entity_name is True
+
+    def test_button_translation_key(self) -> None:
+        """Test button has correct translation_key."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridChargeDischargeButton(coordinator)
+
+        assert button._attr_translation_key == "set_grid_charge_discharge"
+
+    def test_button_entity_category(self) -> None:
+        """Test button has CONFIG entity category."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridChargeDischargeButton(coordinator)
+
+        assert button._attr_entity_category == EntityCategory.CONFIG
+
+    def test_button_unique_id(self) -> None:
+        """Test button unique_id is correctly set."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+
+        button = HomevoltSetGridChargeDischargeButton(coordinator)
+
+        assert button.unique_id == "test123_set_grid_charge_discharge"
+
+    @pytest.mark.asyncio
+    async def test_async_press_calls_api(self) -> None:
+        """Test async_press calls the API set_grid_charge_discharge method."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+        coordinator.api = MagicMock()
+        coordinator.api.set_grid_charge_discharge = AsyncMock(
+            return_value={"command": "sched_set 5", "output": "OK", "exit_code": 0}
+        )
+        coordinator.async_request_refresh = AsyncMock()
+
+        button = HomevoltSetGridChargeDischargeButton(coordinator)
+
+        await button.async_press()
+
+        coordinator.api.set_grid_charge_discharge.assert_called_once()
         coordinator.async_request_refresh.assert_called_once()
 
 

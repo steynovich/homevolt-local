@@ -6,6 +6,15 @@
       },
       "clear_schedule": {
         "default": "mdi:calendar-remove"
+      },
+      "set_grid_charge": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "set_grid_discharge": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "set_grid_charge_discharge": {
+        "default": "mdi:transmission-tower"
       }
     },
     "binary_sensor": {

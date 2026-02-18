@@ -340,6 +340,15 @@
       "set_discharge": {
         "name": "Sätt till urladdning"
       },
+      "set_grid_charge": {
+        "name": "Sätt till nätladdning"
+      },
+      "set_grid_discharge": {
+        "name": "Sätt till näturladdning"
+      },
+      "set_grid_charge_discharge": {
+        "name": "Sätt till nätladdning/-urladdning"
+      },
       "set_solar_charge": {
         "name": "Sätt till solladdning"
       },

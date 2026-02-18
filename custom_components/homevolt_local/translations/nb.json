@@ -340,6 +340,15 @@
       "set_discharge": {
         "name": "Sett til utlading"
       },
+      "set_grid_charge": {
+        "name": "Sett til nettlading"
+      },
+      "set_grid_discharge": {
+        "name": "Sett til nettutlading"
+      },
+      "set_grid_charge_discharge": {
+        "name": "Sett til nettlading/-utlading"
+      },
       "set_solar_charge": {
         "name": "Sett til sollading"
       },

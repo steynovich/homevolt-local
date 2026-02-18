@@ -340,6 +340,15 @@
       "set_discharge": {
         "name": "Auf Entladen setzen"
       },
+      "set_grid_charge": {
+        "name": "Auf Netzladen setzen"
+      },
+      "set_grid_discharge": {
+        "name": "Auf Netzentladen setzen"
+      },
+      "set_grid_charge_discharge": {
+        "name": "Auf Netzladen/-entladen setzen"
+      },
       "set_solar_charge": {
         "name": "Auf Solarladen setzen"
       },

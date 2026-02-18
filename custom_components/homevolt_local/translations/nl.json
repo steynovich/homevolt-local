@@ -340,6 +340,15 @@
       "set_discharge": {
         "name": "Op ontladen zetten"
       },
+      "set_grid_charge": {
+        "name": "Op netladen zetten"
+      },
+      "set_grid_discharge": {
+        "name": "Op netontladen zetten"
+      },
+      "set_grid_charge_discharge": {
+        "name": "Op netladen/-ontladen zetten"
+      },
       "set_solar_charge": {
         "name": "Op zonneladen zetten"
       },

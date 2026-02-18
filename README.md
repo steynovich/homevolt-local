@@ -178,6 +178,9 @@ If your Homevolt device broadcasts mDNS (hostname starting with `homevolt`), Hom
 | Set Idle | Set battery to idle mode | Config |
 | Set Charge | Set battery to charge mode | Config |
 | Set Discharge | Set battery to discharge mode | Config |
+| Set Grid Charge | Force charge from grid | Config |
+| Set Grid Discharge | Force discharge to grid | Config |
+| Set Grid Charge/Discharge | Bidirectional grid control | Config |
 | Set Solar Charge | Charge from solar only | Config |
 | Set Full Solar Export | Export all solar production | Config |
 | Reboot | Hardware reset of the device | Diagnostic |
