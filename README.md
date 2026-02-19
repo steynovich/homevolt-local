@@ -132,6 +132,10 @@ If your Homevolt device broadcasts mDNS (hostname starting with `homevolt`), Hom
 | Mains Voltage | Grid voltage (RMS) | V |
 | Mains Frequency | Grid frequency | Hz |
 | Uptime | System uptime | days |
+| WiFi Signal Strength | WiFi RSSI | dBm |
+| LTE Signal Strength | LTE RSSI | dBm |
+| Rated Power | Rated inverter power | W |
+| OTA Version | OTA firmware version | - |
 | Solar Energy Exported | Energy exported from solar (rarely used) | kWh |
 | Load Signal Strength | Load sensor RSSI | dBm |
 
@@ -168,7 +172,7 @@ If your Homevolt device broadcasts mDNS (hostname starting with `homevolt`), Hom
 
 | Entity | Description | Options |
 |--------|-------------|---------|
-| LED Strip Mode | LED strip display mode | off, on, soc, dem, ser |
+| LED Strip Mode | LED strip display mode | off, on, soc, dem, ser (shows "Unset" when no mode is configured) |
 
 ### Buttons
 

@@ -7,7 +7,7 @@ Home Assistant custom integration for local control of Tibber Homevolt battery s
 - Python 3.12+
 - Home Assistant Core 2024.1.0+
 - aiohttp for async HTTP requests
-- Meets Gold tier of HA Integration Quality Scale
+- Meets Platinum tier of HA Integration Quality Scale
 
 ## Project Structure
 
@@ -20,6 +20,7 @@ ha-homevolt-local/
 │       ├── config_flow.py       # UI configuration flow
 │       ├── const.py             # Constants and endpoints
 │       ├── coordinator.py       # DataUpdateCoordinator
+│       ├── device.py            # Device helpers and DeviceType enum
 │       ├── diagnostics.py       # Debug data export with redaction
 │       ├── binary_sensor.py     # Binary sensor entities (MQTT valid)
 │       ├── button.py            # Button entities
@@ -31,6 +32,7 @@ ha-homevolt-local/
 │       ├── manifest.json        # Integration manifest
 │       ├── strings.json         # UI strings
 │       ├── icons.json           # State-based icons
+│       ├── py.typed             # PEP 561 marker
 │       └── translations/
 │           ├── de.json          # German translations
 │           ├── en.json          # English translations
@@ -42,7 +44,10 @@ ha-homevolt-local/
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py              # Pytest fixtures
+│   ├── test_api.py              # API client tests
 │   ├── test_config_flow.py      # Config flow tests
+│   ├── test_coordinator.py      # Coordinator tests
+│   ├── test_device.py           # Device helper tests
 │   ├── test_diagnostics.py      # Diagnostics tests
 │   ├── test_init.py             # Integration setup tests
 │   ├── test_sensor.py           # Sensor entity tests
@@ -50,7 +55,8 @@ ha-homevolt-local/
 │   ├── test_button.py           # Button entity tests
 │   ├── test_number.py           # Number entity tests
 │   ├── test_select.py           # Select entity tests
-│   └── test_switch.py           # Switch entity tests
+│   ├── test_switch.py           # Switch entity tests
+│   └── test_translations.py     # Translation tests
 ├── config/
 │   └── configuration.yaml       # HA dev config
 ├── docker-compose.yaml          # Local HA test instance
@@ -83,6 +89,10 @@ ha-homevolt-local/
 - **Uptime**: Device uptime in days (diagnostic, disabled by default)
 - **Mains Voltage/Frequency**: Grid measurements (diagnostic, disabled by default)
 - **System Temperature**: ECU temperature
+- **WiFi Signal Strength** (`wifi_rssi`): WiFi RSSI (diagnostic, disabled by default)
+- **LTE Signal Strength** (`lte_rssi`): LTE RSSI (diagnostic, disabled by default)
+- **Rated Power** (`rated_power`): Rated inverter power (diagnostic)
+- **OTA Version** (`ota_version`): OTA firmware version (diagnostic)
 - **EMS Prediction Sensors**: Available charge/discharge power and energy metrics
   - Available Charge Power (`avail_ch_pwr`)
   - Available Discharge Power (`avail_di_pwr`)
@@ -228,7 +238,7 @@ ruff format .
 - ✅ integration-owner: @steynovich
 - ✅ parallel-updates: `PARALLEL_UPDATES = 1`
 - ✅ reauthentication-flow: `async_step_reauth` for credential updates
-- ✅ test-coverage: 90%+ (498 tests)
+- ✅ test-coverage: 90%+ (554 tests)
 - ✅ config-entry-unloading: Clean unload with coordinator cancellation
 - ✅ entity-unavailable: Sensors unavailable when data missing
 - ✅ log-when-unavailable: Debug logging on update failures
