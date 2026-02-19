@@ -690,9 +690,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) ->
     if result:
         # Remove services if no more entries remain
         remaining = [
-            e
-            for e in hass.config_entries.async_entries(DOMAIN)
-            if e.entry_id != entry.entry_id
+            e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id
         ]
         if not remaining:
             for service in (
