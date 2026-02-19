@@ -162,6 +162,14 @@ def _get_battery_icon(soc: float | None) -> str:
     return "mdi:battery-outline"
 
 
+def _first_not_none(*values: Any) -> Any:
+    """Return the first value that is not None."""
+    for v in values:
+        if v is not None:
+            return v
+    return None
+
+
 def _deci_to_unit(value: float | int | None) -> float | None:
     """Convert deci-unit (e.g., deci-degrees) to unit (e.g., degrees)."""
     if value is None:
@@ -244,10 +252,10 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         device_type=DeviceType.CLUSTER,
-        value_fn=lambda data: (
-            _centi_to_unit(_get_ems_data(data).get("soc_avg"))
-            or _get_first_bms(data).get("soc")
-            or data.get("battery_soc")  # OpenAPI flat format
+        value_fn=lambda data: _first_not_none(
+            _centi_to_unit(_get_ems_data(data).get("soc_avg")),
+            _get_first_bms(data).get("soc"),
+            data.get("battery_soc"),  # OpenAPI flat format
         ),
     ),
     # Inverter power - nested: ems_data.power, flat: inverter_power
@@ -258,8 +266,9 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         device_type=DeviceType.CLUSTER,
-        value_fn=lambda data: (
-            _get_ems_data(data).get("power") or data.get("inverter_power")  # OpenAPI flat format
+        value_fn=lambda data: _first_not_none(
+            _get_ems_data(data).get("power"),
+            data.get("inverter_power"),  # OpenAPI flat format
         ),
     ),
     # Inverter energy produced - API returns Wh, convert to kWh
@@ -290,9 +299,9 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         device_type=DeviceType.CLUSTER,
-        value_fn=lambda data: (
-            _milli_to_unit(_get_ems_data(data).get("frequency"))
-            or data.get("grid_frequency")  # OpenAPI flat format (already Hz)
+        value_fn=lambda data: _first_not_none(
+            _milli_to_unit(_get_ems_data(data).get("frequency")),
+            data.get("grid_frequency"),  # OpenAPI flat format (already Hz)
         ),
     ),
     # System temperature - API returns deci-degrees (ECU-specific)
@@ -321,8 +330,9 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         key="operation_state",
         translation_key="operation_state",
         device_type=DeviceType.CLUSTER,
-        value_fn=lambda data: (
-            _get_first_ems(data).get("op_state_str") or data.get("ems_state")  # OpenAPI flat format
+        value_fn=lambda data: _first_not_none(
+            _get_first_ems(data).get("op_state_str"),
+            data.get("ems_state"),  # OpenAPI flat format
         ),
     ),
     # Battery state - nested: ems_data.state_str
@@ -489,8 +499,8 @@ STATUS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         data_key="status",
         device_type=DeviceType.ECU,
-        # up_time is always present in status.json (in ms, convert to days)
-        value_fn=lambda data: data.get("up_time", 0) / 86400000,
+        # up_time is in ms, convert to days; return None when missing
+        value_fn=lambda data: data["up_time"] / 86400000 if "up_time" in data else None,
     ),
     HomevoltSensorEntityDescription(
         key="wifi_rssi",

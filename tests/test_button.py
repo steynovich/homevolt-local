@@ -5,17 +5,21 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.const import EntityCategory
+from homeassistant.exceptions import HomeAssistantError
 
+from custom_components.homevolt_local.api import HomevoltNotLocalModeError
 from custom_components.homevolt_local.button import (
     PARALLEL_UPDATES,
     HomevoltClearScheduleButton,
     HomevoltRebootButton,
     HomevoltSetChargeButton,
     HomevoltSetDischargeButton,
+    HomevoltSetFullSolarExportButton,
     HomevoltSetGridChargeButton,
     HomevoltSetGridChargeDischargeButton,
     HomevoltSetGridDischargeButton,
     HomevoltSetIdleButton,
+    HomevoltSetSolarChargeButton,
 )
 
 
@@ -771,3 +775,118 @@ class TestHomevoltRebootButton:
         button = HomevoltRebootButton(coordinator)
 
         assert button.unique_id == "abc456_reboot"
+
+
+class TestButtonNotLocalModeError:
+    """Test that set_* buttons raise HomeAssistantError when not in local mode."""
+
+    @staticmethod
+    def _make_coordinator() -> MagicMock:
+        """Create a mock coordinator."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {}
+        coordinator.async_request_refresh = AsyncMock()
+        return coordinator
+
+    @pytest.mark.asyncio
+    async def test_set_idle_not_local_mode(self) -> None:
+        """Test SetIdle raises HomeAssistantError on HomevoltNotLocalModeError."""
+        coordinator = self._make_coordinator()
+        coordinator.api = MagicMock()
+        coordinator.api.set_idle = AsyncMock(side_effect=HomevoltNotLocalModeError("not local"))
+        button = HomevoltSetIdleButton(coordinator)
+        with pytest.raises(HomeAssistantError):
+            await button.async_press()
+        coordinator.async_request_refresh.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_set_charge_not_local_mode(self) -> None:
+        """Test SetCharge raises HomeAssistantError on HomevoltNotLocalModeError."""
+        coordinator = self._make_coordinator()
+        coordinator.api = MagicMock()
+        coordinator.api.set_charge = AsyncMock(side_effect=HomevoltNotLocalModeError("not local"))
+        button = HomevoltSetChargeButton(coordinator)
+        with pytest.raises(HomeAssistantError):
+            await button.async_press()
+        coordinator.async_request_refresh.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_set_discharge_not_local_mode(self) -> None:
+        """Test SetDischarge raises HomeAssistantError on HomevoltNotLocalModeError."""
+        coordinator = self._make_coordinator()
+        coordinator.api = MagicMock()
+        coordinator.api.set_discharge = AsyncMock(
+            side_effect=HomevoltNotLocalModeError("not local")
+        )
+        button = HomevoltSetDischargeButton(coordinator)
+        with pytest.raises(HomeAssistantError):
+            await button.async_press()
+        coordinator.async_request_refresh.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_set_grid_charge_not_local_mode(self) -> None:
+        """Test SetGridCharge raises HomeAssistantError on HomevoltNotLocalModeError."""
+        coordinator = self._make_coordinator()
+        coordinator.api = MagicMock()
+        coordinator.api.set_grid_charge = AsyncMock(
+            side_effect=HomevoltNotLocalModeError("not local")
+        )
+        button = HomevoltSetGridChargeButton(coordinator)
+        with pytest.raises(HomeAssistantError):
+            await button.async_press()
+        coordinator.async_request_refresh.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_set_grid_discharge_not_local_mode(self) -> None:
+        """Test SetGridDischarge raises HomeAssistantError on HomevoltNotLocalModeError."""
+        coordinator = self._make_coordinator()
+        coordinator.api = MagicMock()
+        coordinator.api.set_grid_discharge = AsyncMock(
+            side_effect=HomevoltNotLocalModeError("not local")
+        )
+        button = HomevoltSetGridDischargeButton(coordinator)
+        with pytest.raises(HomeAssistantError):
+            await button.async_press()
+        coordinator.async_request_refresh.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_set_grid_charge_discharge_not_local_mode(self) -> None:
+        """Test SetGridChargeDischarge raises HomeAssistantError on HomevoltNotLocalModeError."""
+        coordinator = self._make_coordinator()
+        coordinator.api = MagicMock()
+        coordinator.api.set_grid_charge_discharge = AsyncMock(
+            side_effect=HomevoltNotLocalModeError("not local")
+        )
+        button = HomevoltSetGridChargeDischargeButton(coordinator)
+        with pytest.raises(HomeAssistantError):
+            await button.async_press()
+        coordinator.async_request_refresh.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_set_solar_charge_not_local_mode(self) -> None:
+        """Test SetSolarCharge raises HomeAssistantError on HomevoltNotLocalModeError."""
+        coordinator = self._make_coordinator()
+        coordinator.api = MagicMock()
+        coordinator.api.set_solar_charge = AsyncMock(
+            side_effect=HomevoltNotLocalModeError("not local")
+        )
+        button = HomevoltSetSolarChargeButton(coordinator)
+        with pytest.raises(HomeAssistantError):
+            await button.async_press()
+        coordinator.async_request_refresh.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_set_full_solar_export_not_local_mode(self) -> None:
+        """Test SetFullSolarExport raises HomeAssistantError on HomevoltNotLocalModeError."""
+        coordinator = self._make_coordinator()
+        coordinator.api = MagicMock()
+        coordinator.api.set_full_solar_export = AsyncMock(
+            side_effect=HomevoltNotLocalModeError("not local")
+        )
+        button = HomevoltSetFullSolarExportButton(coordinator)
+        with pytest.raises(HomeAssistantError):
+            await button.async_press()
+        coordinator.async_request_refresh.assert_not_called()

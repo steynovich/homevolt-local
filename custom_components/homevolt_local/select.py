@@ -101,5 +101,6 @@ class HomevoltSelect(CoordinatorEntity[HomevoltCoordinator], SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.coordinator.api.set_param(self.entity_description.param_key, option)
+        value = "" if option == "unset" else option
+        await self.coordinator.api.set_param(self.entity_description.param_key, value)
         await self.coordinator.async_request_refresh()

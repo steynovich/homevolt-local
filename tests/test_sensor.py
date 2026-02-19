@@ -1,6 +1,6 @@
 """Tests for Homevolt Local sensor platform."""
 
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -19,15 +19,16 @@ from custom_components.homevolt_local.sensor import (
     EMS_MODE_SENSORS,
     EMS_SENSORS,
     EXTERNAL_SENSOR_SENSORS,
-    HomevoltSensor,
-    HomevoltSensorEntityDescription,
     MAINS_SENSORS,
     OTA_SENSORS,
     PARALLEL_UPDATES,
     SCHEDULE_CONTROL_MODES,
     SCHEDULE_SENSORS,
     STATUS_SENSORS,
+    HomevoltSensor,
+    HomevoltSensorEntityDescription,
     _deci_to_unit,
+    _first_not_none,
     _get_aggregated_ems_info,
     _get_battery_icon,
     _get_ems_data,
@@ -72,6 +73,38 @@ class TestUnitConversions:
     def test_milli_to_unit_none(self) -> None:
         """Test milli to unit conversion with None."""
         assert _milli_to_unit(None) is None
+
+
+class TestFirstNotNone:
+    """Test _first_not_none helper function."""
+
+    def test_returns_first_non_none(self) -> None:
+        """Test returns first non-None value."""
+        assert _first_not_none(None, 42, 99) == 42
+
+    def test_returns_zero(self) -> None:
+        """Test returns zero (not falsy skip)."""
+        assert _first_not_none(None, 0, 99) == 0
+
+    def test_returns_zero_float(self) -> None:
+        """Test returns 0.0 (not falsy skip)."""
+        assert _first_not_none(None, 0.0, 99) == 0.0
+
+    def test_returns_empty_string(self) -> None:
+        """Test returns empty string (not falsy skip)."""
+        assert _first_not_none(None, "", "fallback") == ""
+
+    def test_returns_first_value(self) -> None:
+        """Test returns first value when not None."""
+        assert _first_not_none(1, 2, 3) == 1
+
+    def test_all_none(self) -> None:
+        """Test returns None when all values are None."""
+        assert _first_not_none(None, None, None) is None
+
+    def test_no_args(self) -> None:
+        """Test returns None with no arguments."""
+        assert _first_not_none() is None
 
 
 class TestGetBatteryIcon:
@@ -559,6 +592,52 @@ class TestSensorValueFunctions:
         }
         result = sensor.value_fn(data)
         assert result == 8000.0  # kWh
+
+
+class TestSensorZeroValueHandling:
+    """Test that sensors correctly handle zero values (not suppressed by or-chains)."""
+
+    def test_battery_soc_zero_nested(self) -> None:
+        """Test battery SOC returns 0.0 when soc_avg is 0 (not None/fallback)."""
+        sensor = next(s for s in EMS_SENSORS if s.key == "battery_soc")
+        data = {"ems": [{"ems_data": {"soc_avg": 0}, "bms_data": [{"soc": 50}]}]}
+        result = sensor.value_fn(data)
+        assert result == 0.0  # 0 centi-% = 0.0%, not fallback to bms soc 50
+
+    def test_inverter_power_zero_nested(self) -> None:
+        """Test inverter power returns 0 when power is 0 (not fallback to flat format)."""
+        sensor = next(s for s in EMS_SENSORS if s.key == "inverter_power")
+        data = {"ems": [{"ems_data": {"power": 0}}], "inverter_power": 999}
+        result = sensor.value_fn(data)
+        assert result == 0  # Not fallback to 999
+
+    def test_ems_frequency_zero_nested(self) -> None:
+        """Test EMS frequency returns 0.0 when frequency is 0 (not fallback to flat format)."""
+        sensor = next(s for s in EMS_SENSORS if s.key == "ems_frequency")
+        data = {"ems": [{"ems_data": {"frequency": 0}}], "grid_frequency": 50.0}
+        result = sensor.value_fn(data)
+        assert result == 0.0  # 0 milli-Hz = 0.0 Hz, not fallback to 50.0
+
+    def test_operation_state_empty_string_nested(self) -> None:
+        """Test operation state returns empty string when op_state_str is '' (not fallback)."""
+        sensor = next(s for s in EMS_SENSORS if s.key == "operation_state")
+        data = {"ems": [{"op_state_str": ""}], "ems_state": "CHARGING"}
+        result = sensor.value_fn(data)
+        assert result == ""  # Empty string, not fallback to "CHARGING"
+
+    def test_uptime_missing_returns_none(self) -> None:
+        """Test uptime returns None when up_time key is missing."""
+        sensor = next(s for s in STATUS_SENSORS if s.key == "uptime")
+        data = {}
+        result = sensor.value_fn(data)
+        assert result is None
+
+    def test_uptime_zero_returns_zero(self) -> None:
+        """Test uptime returns 0.0 when up_time is 0 (device just rebooted)."""
+        sensor = next(s for s in STATUS_SENSORS if s.key == "uptime")
+        data = {"up_time": 0}
+        result = sensor.value_fn(data)
+        assert result == 0.0
 
 
 class TestScheduleSensorValueFunctions:

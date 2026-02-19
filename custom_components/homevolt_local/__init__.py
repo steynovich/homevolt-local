@@ -686,4 +686,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    result = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if result:
+        # Remove services if no more entries remain
+        remaining = [
+            e
+            for e in hass.config_entries.async_entries(DOMAIN)
+            if e.entry_id != entry.entry_id
+        ]
+        if not remaining:
+            for service in (
+                SERVICE_CLEAR_SCHEDULE,
+                SERVICE_SET_IDLE,
+                SERVICE_SET_CHARGE,
+                SERVICE_SET_DISCHARGE,
+                SERVICE_SET_GRID_CHARGE,
+                SERVICE_SET_GRID_DISCHARGE,
+                SERVICE_SET_GRID_CHARGE_DISCHARGE,
+                SERVICE_SET_SOLAR_CHARGE,
+                SERVICE_SET_SOLAR_CHARGE_DISCHARGE,
+                SERVICE_SET_FULL_SOLAR_EXPORT,
+                SERVICE_SET_SCHEDULE,
+                SERVICE_REBOOT,
+            ):
+                hass.services.async_remove(DOMAIN, service)
+    return result

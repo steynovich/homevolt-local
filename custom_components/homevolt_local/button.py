@@ -7,10 +7,13 @@ import logging
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HomevoltConfigEntry
+from .api import HomevoltNotLocalModeError
+from .const import DOMAIN
 from .coordinator import HomevoltCoordinator
 from .device import get_ecu_device_info
 
@@ -78,7 +81,13 @@ class HomevoltSetIdleButton(CoordinatorEntity[HomevoltCoordinator], ButtonEntity
 
     async def async_press(self) -> None:
         """Handle button press to set battery to idle mode."""
-        await self.coordinator.api.set_idle()
+        try:
+            await self.coordinator.api.set_idle()
+        except HomevoltNotLocalModeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_local_mode",
+            ) from err
         await self.coordinator.async_request_refresh()
 
 
@@ -97,7 +106,13 @@ class HomevoltSetChargeButton(CoordinatorEntity[HomevoltCoordinator], ButtonEnti
 
     async def async_press(self) -> None:
         """Handle button press to set battery to charge mode."""
-        await self.coordinator.api.set_charge()
+        try:
+            await self.coordinator.api.set_charge()
+        except HomevoltNotLocalModeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_local_mode",
+            ) from err
         await self.coordinator.async_request_refresh()
 
 
@@ -116,7 +131,13 @@ class HomevoltSetDischargeButton(CoordinatorEntity[HomevoltCoordinator], ButtonE
 
     async def async_press(self) -> None:
         """Handle button press to set battery to discharge mode."""
-        await self.coordinator.api.set_discharge()
+        try:
+            await self.coordinator.api.set_discharge()
+        except HomevoltNotLocalModeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_local_mode",
+            ) from err
         await self.coordinator.async_request_refresh()
 
 
@@ -135,7 +156,13 @@ class HomevoltSetGridChargeButton(CoordinatorEntity[HomevoltCoordinator], Button
 
     async def async_press(self) -> None:
         """Handle button press to set battery to grid charge mode."""
-        await self.coordinator.api.set_grid_charge(setpoint=0)
+        try:
+            await self.coordinator.api.set_grid_charge(setpoint=0)
+        except HomevoltNotLocalModeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_local_mode",
+            ) from err
         await self.coordinator.async_request_refresh()
 
 
@@ -154,7 +181,13 @@ class HomevoltSetGridDischargeButton(CoordinatorEntity[HomevoltCoordinator], But
 
     async def async_press(self) -> None:
         """Handle button press to set battery to grid discharge mode."""
-        await self.coordinator.api.set_grid_discharge(setpoint=0)
+        try:
+            await self.coordinator.api.set_grid_discharge(setpoint=0)
+        except HomevoltNotLocalModeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_local_mode",
+            ) from err
         await self.coordinator.async_request_refresh()
 
 
@@ -173,7 +206,13 @@ class HomevoltSetGridChargeDischargeButton(CoordinatorEntity[HomevoltCoordinator
 
     async def async_press(self) -> None:
         """Handle button press to set battery to grid charge/discharge mode."""
-        await self.coordinator.api.set_grid_charge_discharge(setpoint=0)
+        try:
+            await self.coordinator.api.set_grid_charge_discharge(setpoint=0)
+        except HomevoltNotLocalModeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_local_mode",
+            ) from err
         await self.coordinator.async_request_refresh()
 
 
@@ -192,7 +231,13 @@ class HomevoltSetSolarChargeButton(CoordinatorEntity[HomevoltCoordinator], Butto
 
     async def async_press(self) -> None:
         """Handle button press to set battery to solar charge mode."""
-        await self.coordinator.api.set_solar_charge()
+        try:
+            await self.coordinator.api.set_solar_charge()
+        except HomevoltNotLocalModeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_local_mode",
+            ) from err
         await self.coordinator.async_request_refresh()
 
 
@@ -211,7 +256,13 @@ class HomevoltSetFullSolarExportButton(CoordinatorEntity[HomevoltCoordinator], B
 
     async def async_press(self) -> None:
         """Handle button press to set battery to full solar export mode."""
-        await self.coordinator.api.set_full_solar_export()
+        try:
+            await self.coordinator.api.set_full_solar_export()
+        except HomevoltNotLocalModeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_local_mode",
+            ) from err
         await self.coordinator.async_request_refresh()
 
 

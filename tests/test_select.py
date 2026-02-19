@@ -165,6 +165,26 @@ class TestHomevoltSelect:
         coordinator.api.set_param.assert_called_once_with("ledstrip_mode", "on")
         coordinator.async_request_refresh.assert_called_once()
 
+    @pytest.mark.asyncio
+    async def test_async_select_option_unset_sends_empty_string(self) -> None:
+        """Test async_select_option sends empty string when 'unset' is selected."""
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.data = {"params": []}
+        coordinator.api = MagicMock()
+        coordinator.api.set_param = AsyncMock()
+        coordinator.async_request_refresh = AsyncMock()
+
+        description = SELECTS[0]
+        select = HomevoltSelect(coordinator, description)
+
+        await select.async_select_option("unset")
+
+        coordinator.api.set_param.assert_called_once_with("ledstrip_mode", "")
+        coordinator.async_request_refresh.assert_called_once()
+
     def test_select_device_info(self) -> None:
         """Test select device_info is correctly set."""
         coordinator = MagicMock()

@@ -1,6 +1,6 @@
 """Tests for Homevolt Local integration setup."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import voluptuous as vol
@@ -9,7 +9,20 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from custom_components.homevolt_local import (
     SCHEDULE_ENTRY_SCHEMA,
+    SERVICE_CLEAR_SCHEDULE,
+    SERVICE_REBOOT,
+    SERVICE_SET_CHARGE,
+    SERVICE_SET_DISCHARGE,
+    SERVICE_SET_FULL_SOLAR_EXPORT,
+    SERVICE_SET_GRID_CHARGE,
+    SERVICE_SET_GRID_CHARGE_DISCHARGE,
+    SERVICE_SET_GRID_DISCHARGE,
+    SERVICE_SET_IDLE,
+    SERVICE_SET_SCHEDULE,
     SERVICE_SET_SCHEDULE_SCHEMA,
+    SERVICE_SET_SOLAR_CHARGE,
+    SERVICE_SET_SOLAR_CHARGE_DISCHARGE,
+    async_unload_entry,
     validate_iso8601_datetime,
 )
 from custom_components.homevolt_local.api import (
@@ -272,3 +285,117 @@ async def test_setup_entry_connection_error(
 
         with pytest.raises(ConfigEntryNotReady):
             await async_setup_entry(hass, entry)
+
+
+class TestAsyncUnloadEntry:
+    """Tests for async_unload_entry service cleanup."""
+
+    @pytest.mark.asyncio
+    async def test_services_removed_when_last_entry_unloaded(
+        self, hass: HomeAssistant
+    ) -> None:
+        """Test services are removed when the last config entry is unloaded."""
+        # Register some services so we can check they get removed
+        all_services = [
+            SERVICE_CLEAR_SCHEDULE,
+            SERVICE_SET_IDLE,
+            SERVICE_SET_CHARGE,
+            SERVICE_SET_DISCHARGE,
+            SERVICE_SET_GRID_CHARGE,
+            SERVICE_SET_GRID_DISCHARGE,
+            SERVICE_SET_GRID_CHARGE_DISCHARGE,
+            SERVICE_SET_SOLAR_CHARGE,
+            SERVICE_SET_SOLAR_CHARGE_DISCHARGE,
+            SERVICE_SET_FULL_SOLAR_EXPORT,
+            SERVICE_SET_SCHEDULE,
+            SERVICE_REBOOT,
+        ]
+        for svc in all_services:
+            hass.services.async_register(DOMAIN, svc, AsyncMock())
+
+        # Verify services are registered
+        for svc in all_services:
+            assert hass.services.has_service(DOMAIN, svc)
+
+        # Create a mock entry with no other entries remaining
+        entry = MagicMock()
+        entry.entry_id = "entry1"
+
+        # async_entries returns only this entry (so after removal, none remain)
+        hass.config_entries.async_entries = MagicMock(return_value=[entry])
+
+        with patch.object(
+            hass.config_entries, "async_unload_platforms", return_value=True
+        ):
+            result = await async_unload_entry(hass, entry)
+
+        assert result is True
+        # All services should be removed
+        for svc in all_services:
+            assert not hass.services.has_service(DOMAIN, svc)
+
+    @pytest.mark.asyncio
+    async def test_services_kept_when_other_entries_remain(
+        self, hass: HomeAssistant
+    ) -> None:
+        """Test services are kept when other config entries still exist."""
+        all_services = [
+            SERVICE_CLEAR_SCHEDULE,
+            SERVICE_SET_IDLE,
+            SERVICE_SET_CHARGE,
+            SERVICE_SET_DISCHARGE,
+            SERVICE_SET_GRID_CHARGE,
+            SERVICE_SET_GRID_DISCHARGE,
+            SERVICE_SET_GRID_CHARGE_DISCHARGE,
+            SERVICE_SET_SOLAR_CHARGE,
+            SERVICE_SET_SOLAR_CHARGE_DISCHARGE,
+            SERVICE_SET_FULL_SOLAR_EXPORT,
+            SERVICE_SET_SCHEDULE,
+            SERVICE_REBOOT,
+        ]
+        for svc in all_services:
+            hass.services.async_register(DOMAIN, svc, AsyncMock())
+
+        entry1 = MagicMock()
+        entry1.entry_id = "entry1"
+        entry2 = MagicMock()
+        entry2.entry_id = "entry2"
+
+        # Two entries exist - unloading entry1 leaves entry2
+        hass.config_entries.async_entries = MagicMock(return_value=[entry1, entry2])
+
+        with patch.object(
+            hass.config_entries, "async_unload_platforms", return_value=True
+        ):
+            result = await async_unload_entry(hass, entry1)
+
+        assert result is True
+        # Services should still be registered
+        for svc in all_services:
+            assert hass.services.has_service(DOMAIN, svc)
+
+    @pytest.mark.asyncio
+    async def test_services_not_removed_when_unload_fails(
+        self, hass: HomeAssistant
+    ) -> None:
+        """Test services are not removed when platform unload fails."""
+        all_services = [
+            SERVICE_CLEAR_SCHEDULE,
+            SERVICE_SET_IDLE,
+        ]
+        for svc in all_services:
+            hass.services.async_register(DOMAIN, svc, AsyncMock())
+
+        entry = MagicMock()
+        entry.entry_id = "entry1"
+        hass.config_entries.async_entries = MagicMock(return_value=[entry])
+
+        with patch.object(
+            hass.config_entries, "async_unload_platforms", return_value=False
+        ):
+            result = await async_unload_entry(hass, entry)
+
+        assert result is False
+        # Services should still be registered since unload failed
+        for svc in all_services:
+            assert hass.services.has_service(DOMAIN, svc)
