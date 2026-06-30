@@ -243,6 +243,22 @@ class HomevoltApi:
         """Get charging schedules."""
         return await self._request_cached(ENDPOINT_SCHEDULE)
 
+    async def _ensure_local_mode(self) -> None:
+        """Verify the device is currently in local mode before sending a command.
+
+        Bypasses the response cache so a stale cached local_mode can't let a
+        command through to a device that has since switched to remote mode.
+
+        Raises:
+            HomevoltNotLocalModeError: If device is not in local mode
+        """
+        schedule = await self._request(ENDPOINT_SCHEDULE)
+        if not schedule.get("local_mode", False):
+            raise HomevoltNotLocalModeError(
+                "Cannot set schedule: device is not in local mode. "
+                "Enable local mode first to prevent remote overrides."
+            )
+
     async def get_error_report(self) -> dict[str, Any]:
         """Get error report."""
         return await self._request_cached(ENDPOINT_ERROR_REPORT)
@@ -273,6 +289,10 @@ class HomevoltApi:
         for key, method in endpoints:
             try:
                 data[key] = await method()
+            except (HomevoltAuthError, HomevoltRateLimitError):
+                # Auth/rate-limit failures must propagate so the coordinator
+                # can trigger reauthentication instead of silently degrading.
+                raise
             except HomevoltApiError as err:
                 _LOGGER.debug("Failed to fetch %s: %s", key, err)
                 data[key] = {}
@@ -419,12 +439,7 @@ class HomevoltApi:
         Raises:
             HomevoltNotLocalModeError: If device is not in local mode
         """
-        schedule = await self.get_schedule()
-        if not schedule.get("local_mode", False):
-            raise HomevoltNotLocalModeError(
-                "Cannot set schedule: device is not in local mode. "
-                "Enable local mode first to prevent remote overrides."
-            )
+        await self._ensure_local_mode()
         cmd = "sched_set 0"
         if offline:
             cmd += " --offline"
@@ -451,12 +466,7 @@ class HomevoltApi:
         Raises:
             HomevoltNotLocalModeError: If device is not in local mode
         """
-        schedule = await self.get_schedule()
-        if not schedule.get("local_mode", False):
-            raise HomevoltNotLocalModeError(
-                "Cannot set schedule: device is not in local mode. "
-                "Enable local mode first to prevent remote overrides."
-            )
+        await self._ensure_local_mode()
         cmd = "sched_set 1"
         if setpoint is not None:
             cmd += f" -s {setpoint}"
@@ -487,12 +497,7 @@ class HomevoltApi:
         Raises:
             HomevoltNotLocalModeError: If device is not in local mode
         """
-        schedule = await self.get_schedule()
-        if not schedule.get("local_mode", False):
-            raise HomevoltNotLocalModeError(
-                "Cannot set schedule: device is not in local mode. "
-                "Enable local mode first to prevent remote overrides."
-            )
+        await self._ensure_local_mode()
         cmd = "sched_set 2"
         if setpoint is not None:
             cmd += f" -s {setpoint}"
@@ -523,12 +528,7 @@ class HomevoltApi:
         Raises:
             HomevoltNotLocalModeError: If device is not in local mode
         """
-        schedule = await self.get_schedule()
-        if not schedule.get("local_mode", False):
-            raise HomevoltNotLocalModeError(
-                "Cannot set schedule: device is not in local mode. "
-                "Enable local mode first to prevent remote overrides."
-            )
+        await self._ensure_local_mode()
         cmd = "sched_set 3"
         if setpoint is not None:
             cmd += f" -s {setpoint}"
@@ -559,12 +559,7 @@ class HomevoltApi:
         Raises:
             HomevoltNotLocalModeError: If device is not in local mode
         """
-        schedule = await self.get_schedule()
-        if not schedule.get("local_mode", False):
-            raise HomevoltNotLocalModeError(
-                "Cannot set schedule: device is not in local mode. "
-                "Enable local mode first to prevent remote overrides."
-            )
+        await self._ensure_local_mode()
         cmd = "sched_set 4"
         if setpoint is not None:
             cmd += f" -s {setpoint}"
@@ -599,12 +594,7 @@ class HomevoltApi:
         Raises:
             HomevoltNotLocalModeError: If device is not in local mode
         """
-        schedule = await self.get_schedule()
-        if not schedule.get("local_mode", False):
-            raise HomevoltNotLocalModeError(
-                "Cannot set schedule: device is not in local mode. "
-                "Enable local mode first to prevent remote overrides."
-            )
+        await self._ensure_local_mode()
         cmd = "sched_set 5"
         if setpoint is not None:
             cmd += f" -s {setpoint}"
@@ -639,12 +629,7 @@ class HomevoltApi:
         Raises:
             HomevoltNotLocalModeError: If device is not in local mode
         """
-        schedule = await self.get_schedule()
-        if not schedule.get("local_mode", False):
-            raise HomevoltNotLocalModeError(
-                "Cannot set schedule: device is not in local mode. "
-                "Enable local mode first to prevent remote overrides."
-            )
+        await self._ensure_local_mode()
         cmd = "sched_set 7"
         if setpoint is not None:
             cmd += f" -s {setpoint}"
@@ -679,12 +664,7 @@ class HomevoltApi:
         Raises:
             HomevoltNotLocalModeError: If device is not in local mode
         """
-        schedule = await self.get_schedule()
-        if not schedule.get("local_mode", False):
-            raise HomevoltNotLocalModeError(
-                "Cannot set schedule: device is not in local mode. "
-                "Enable local mode first to prevent remote overrides."
-            )
+        await self._ensure_local_mode()
         cmd = "sched_set 8"
         if setpoint is not None:
             cmd += f" -s {setpoint}"
@@ -719,12 +699,7 @@ class HomevoltApi:
         Raises:
             HomevoltNotLocalModeError: If device is not in local mode
         """
-        schedule = await self.get_schedule()
-        if not schedule.get("local_mode", False):
-            raise HomevoltNotLocalModeError(
-                "Cannot set schedule: device is not in local mode. "
-                "Enable local mode first to prevent remote overrides."
-            )
+        await self._ensure_local_mode()
         cmd = "sched_set 9"
         if setpoint is not None:
             cmd += f" -s {setpoint}"
@@ -807,12 +782,7 @@ class HomevoltApi:
         if not entries:
             raise ValueError("Schedule entries list cannot be empty")
 
-        schedule = await self.get_schedule()
-        if not schedule.get("local_mode", False):
-            raise HomevoltNotLocalModeError(
-                "Cannot set schedule: device is not in local mode. "
-                "Enable local mode first to prevent remote overrides."
-            )
+        await self._ensure_local_mode()
 
         results = []
         for i, entry in enumerate(entries):

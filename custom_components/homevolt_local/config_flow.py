@@ -206,7 +206,9 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_USERNAME, default=reconfigure_entry.data.get(CONF_USERNAME)
                     ): str,
-                    vol.Optional(CONF_PASSWORD): str,
+                    vol.Optional(
+                        CONF_PASSWORD, default=reconfigure_entry.data.get(CONF_PASSWORD)
+                    ): str,
                 }
             ),
             errors=errors,
