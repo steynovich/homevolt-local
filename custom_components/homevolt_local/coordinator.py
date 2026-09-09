@@ -49,6 +49,10 @@ class HomevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     config_entry: ConfigEntry
 
+    #: Device registry entry id of the ECU device, filled in during setup once the
+    #: device has been registered. Used as ``via_device_id`` for the cluster device.
+    ecu_device_entry_id: str | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,

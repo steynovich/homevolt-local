@@ -24,6 +24,7 @@ from .api import (
 )
 from .const import DOMAIN
 from .coordinator import HomevoltCoordinator
+from .device import async_register_ecu_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -222,6 +223,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Register the ECU device up front so the cluster device can reference it by
+    # device registry entry id (via_device_id) when the platforms are set up.
+    coordinator.ecu_device_entry_id = async_register_ecu_device(hass, entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

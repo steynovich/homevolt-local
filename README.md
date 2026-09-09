@@ -43,7 +43,7 @@ This integration allows you to monitor and control your Homevolt battery system 
 
 ## Prerequisites
 
-- Home Assistant 2024.1.0 or newer
+- Home Assistant 2026.8.0 or newer
 - Homevolt device accessible on your local network
 - Local API enabled on your Homevolt (contact Tibber support if needed)
 
