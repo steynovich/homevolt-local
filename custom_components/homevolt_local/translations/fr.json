@@ -82,6 +82,12 @@
     },
     "command_failed": {
       "message": "Échec de la commande : {error}"
+    },
+    "device_not_found": {
+      "message": "Appareil {device_id} introuvable"
+    },
+    "config_entry_not_found": {
+      "message": "Aucune entrée de configuration Homevolt trouvée pour l'appareil {device_id}"
     }
   },
   "services": {

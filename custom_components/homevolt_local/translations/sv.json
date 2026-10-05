@@ -82,6 +82,12 @@
     },
     "command_failed": {
       "message": "Kommandot misslyckades: {error}"
+    },
+    "device_not_found": {
+      "message": "Enheten {device_id} hittades inte"
+    },
+    "config_entry_not_found": {
+      "message": "Ingen Homevolt-konfigurationspost hittades för enheten {device_id}"
     }
   },
   "services": {

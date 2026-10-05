@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+from typing import cast
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
@@ -185,6 +186,26 @@ SERVICE_SET_SCHEDULE_SCHEMA = vol.Schema(
 type HomevoltConfigEntry = ConfigEntry[HomevoltCoordinator]
 
 
+def _async_get_coordinator(hass: HomeAssistant, device_id: str) -> HomevoltCoordinator:
+    """Resolve the coordinator for a device, raising if it can't be found."""
+    device_entry = dr.async_get(hass).async_get(device_id)
+    if device_entry is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"device_id": device_id},
+        )
+    for config_entry_id in device_entry.config_entries:
+        config_entry = hass.config_entries.async_get_entry(config_entry_id)
+        if config_entry and config_entry.domain == DOMAIN:
+            return cast(HomevoltCoordinator, config_entry.runtime_data)
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="config_entry_not_found",
+        translation_placeholders={"device_id": device_id},
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> bool:
     """Set up Homevolt Local from a config entry."""
     host = entry.data[CONF_HOST]
@@ -236,23 +257,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
         async def async_clear_schedule(call: ServiceCall) -> None:
             """Handle the clear_schedule service call."""
             device_id = call.data["device_id"]
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    await coord.api.clear_schedule()
-                    await coord.async_request_refresh()
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            await coord.api.clear_schedule()
+            await coord.async_request_refresh()
 
         hass.services.async_register(
             DOMAIN,
@@ -267,29 +274,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             """Handle the set_idle service call."""
             device_id = call.data["device_id"]
             offline = call.data.get("offline", False)
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    try:
-                        await coord.api.set_idle(offline)
-                        await coord.async_request_refresh()
-                    except HomevoltNotLocalModeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="not_local_mode",
-                        ) from err
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            try:
+                await coord.api.set_idle(offline)
+                await coord.async_request_refresh()
+            except HomevoltNotLocalModeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_local_mode",
+                ) from err
 
         hass.services.async_register(
             DOMAIN,
@@ -306,29 +299,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             setpoint = call.data.get("setpoint")
             min_soc = call.data.get("min_soc")
             max_soc = call.data.get("max_soc")
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    try:
-                        await coord.api.set_charge(setpoint, min_soc, max_soc)
-                        await coord.async_request_refresh()
-                    except HomevoltNotLocalModeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="not_local_mode",
-                        ) from err
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            try:
+                await coord.api.set_charge(setpoint, min_soc, max_soc)
+                await coord.async_request_refresh()
+            except HomevoltNotLocalModeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_local_mode",
+                ) from err
 
         hass.services.async_register(
             DOMAIN,
@@ -345,29 +324,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             setpoint = call.data.get("setpoint")
             min_soc = call.data.get("min_soc")
             max_soc = call.data.get("max_soc")
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    try:
-                        await coord.api.set_discharge(setpoint, min_soc, max_soc)
-                        await coord.async_request_refresh()
-                    except HomevoltNotLocalModeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="not_local_mode",
-                        ) from err
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            try:
+                await coord.api.set_discharge(setpoint, min_soc, max_soc)
+                await coord.async_request_refresh()
+            except HomevoltNotLocalModeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_local_mode",
+                ) from err
 
         hass.services.async_register(
             DOMAIN,
@@ -384,29 +349,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             setpoint = call.data.get("setpoint")
             min_soc = call.data.get("min_soc")
             max_soc = call.data.get("max_soc")
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    try:
-                        await coord.api.set_grid_charge(setpoint, min_soc, max_soc)
-                        await coord.async_request_refresh()
-                    except HomevoltNotLocalModeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="not_local_mode",
-                        ) from err
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            try:
+                await coord.api.set_grid_charge(setpoint, min_soc, max_soc)
+                await coord.async_request_refresh()
+            except HomevoltNotLocalModeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_local_mode",
+                ) from err
 
         hass.services.async_register(
             DOMAIN,
@@ -423,29 +374,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             setpoint = call.data.get("setpoint")
             min_soc = call.data.get("min_soc")
             max_soc = call.data.get("max_soc")
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    try:
-                        await coord.api.set_grid_discharge(setpoint, min_soc, max_soc)
-                        await coord.async_request_refresh()
-                    except HomevoltNotLocalModeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="not_local_mode",
-                        ) from err
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            try:
+                await coord.api.set_grid_discharge(setpoint, min_soc, max_soc)
+                await coord.async_request_refresh()
+            except HomevoltNotLocalModeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_local_mode",
+                ) from err
 
         hass.services.async_register(
             DOMAIN,
@@ -464,31 +401,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             discharge_setpoint = call.data.get("discharge_setpoint")
             min_soc = call.data.get("min_soc")
             max_soc = call.data.get("max_soc")
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    try:
-                        await coord.api.set_grid_charge_discharge(
-                            setpoint, charge_setpoint, discharge_setpoint, min_soc, max_soc
-                        )
-                        await coord.async_request_refresh()
-                    except HomevoltNotLocalModeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="not_local_mode",
-                        ) from err
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            try:
+                await coord.api.set_grid_charge_discharge(
+                    setpoint, charge_setpoint, discharge_setpoint, min_soc, max_soc
+                )
+                await coord.async_request_refresh()
+            except HomevoltNotLocalModeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_local_mode",
+                ) from err
 
         hass.services.async_register(
             DOMAIN,
@@ -505,29 +428,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             setpoint = call.data.get("setpoint")
             min_soc = call.data.get("min_soc")
             max_soc = call.data.get("max_soc")
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    try:
-                        await coord.api.set_solar_charge(setpoint, min_soc, max_soc)
-                        await coord.async_request_refresh()
-                    except HomevoltNotLocalModeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="not_local_mode",
-                        ) from err
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            try:
+                await coord.api.set_solar_charge(setpoint, min_soc, max_soc)
+                await coord.async_request_refresh()
+            except HomevoltNotLocalModeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_local_mode",
+                ) from err
 
         hass.services.async_register(
             DOMAIN,
@@ -546,31 +455,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             discharge_setpoint = call.data.get("discharge_setpoint")
             min_soc = call.data.get("min_soc")
             max_soc = call.data.get("max_soc")
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    try:
-                        await coord.api.set_solar_charge_discharge(
-                            setpoint, charge_setpoint, discharge_setpoint, min_soc, max_soc
-                        )
-                        await coord.async_request_refresh()
-                    except HomevoltNotLocalModeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="not_local_mode",
-                        ) from err
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            try:
+                await coord.api.set_solar_charge_discharge(
+                    setpoint, charge_setpoint, discharge_setpoint, min_soc, max_soc
+                )
+                await coord.async_request_refresh()
+            except HomevoltNotLocalModeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_local_mode",
+                ) from err
 
         hass.services.async_register(
             DOMAIN,
@@ -587,29 +482,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             setpoint = call.data.get("setpoint")
             min_soc = call.data.get("min_soc")
             max_soc = call.data.get("max_soc")
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    try:
-                        await coord.api.set_full_solar_export(setpoint, min_soc, max_soc)
-                        await coord.async_request_refresh()
-                    except HomevoltNotLocalModeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="not_local_mode",
-                        ) from err
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            try:
+                await coord.api.set_full_solar_export(setpoint, min_soc, max_soc)
+                await coord.async_request_refresh()
+            except HomevoltNotLocalModeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_local_mode",
+                ) from err
 
         hass.services.async_register(
             DOMAIN,
@@ -624,35 +505,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
             """Handle the set_schedule service call."""
             device_id = call.data["device_id"]
             schedule_entries = call.data["schedule"]
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    try:
-                        await coord.api.set_schedule(schedule_entries)
-                        await coord.async_request_refresh()
-                    except HomevoltNotLocalModeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="not_local_mode",
-                        ) from err
-                    except HomevoltCommandError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="command_failed",
-                            translation_placeholders={"error": str(err)},
-                        ) from err
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            try:
+                await coord.api.set_schedule(schedule_entries)
+                await coord.async_request_refresh()
+            except HomevoltNotLocalModeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_local_mode",
+                ) from err
+            except HomevoltCommandError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
         hass.services.async_register(
             DOMAIN,
@@ -666,22 +533,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
         async def async_reboot(call: ServiceCall) -> None:
             """Handle the reboot service call."""
             device_id = call.data["device_id"]
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(device_id)
-
-            if device_entry is None:
-                _LOGGER.error("Device %s not found", device_id)
-                return
-
-            # Find the config entry for this device
-            for config_entry_id in device_entry.config_entries:
-                config_entry = hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry and config_entry.domain == DOMAIN:
-                    coord: HomevoltCoordinator = config_entry.runtime_data
-                    await coord.api.reboot()
-                    return
-
-            _LOGGER.error("No Homevolt config entry found for device %s", device_id)
+            coord = _async_get_coordinator(hass, device_id)
+            await coord.api.reboot()
 
         hass.services.async_register(
             DOMAIN,

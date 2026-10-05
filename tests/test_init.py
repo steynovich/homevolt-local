@@ -476,3 +476,95 @@ async def test_set_schedule_command_error_is_translated(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "command_failed"
     assert exc_info.value.translation_placeholders == {"error": "bad schedule"}
+
+
+ALL_SERVICES = [
+    SERVICE_CLEAR_SCHEDULE,
+    SERVICE_REBOOT,
+    SERVICE_SET_CHARGE,
+    SERVICE_SET_DISCHARGE,
+    SERVICE_SET_FULL_SOLAR_EXPORT,
+    SERVICE_SET_GRID_CHARGE,
+    SERVICE_SET_GRID_CHARGE_DISCHARGE,
+    SERVICE_SET_GRID_DISCHARGE,
+    SERVICE_SET_IDLE,
+    SERVICE_SET_SCHEDULE,
+    SERVICE_SET_SOLAR_CHARGE,
+    SERVICE_SET_SOLAR_CHARGE_DISCHARGE,
+]
+
+
+def _service_data(service: str, device_id: str) -> dict:
+    """Build minimal valid service data for a service."""
+    data: dict = {"device_id": device_id}
+    if service == SERVICE_SET_SCHEDULE:
+        data["schedule"] = [{"type": 0, "setpoint": 0}]
+    if service == SERVICE_SET_GRID_CHARGE_DISCHARGE:
+        data["setpoint"] = 0
+    return data
+
+
+@pytest.mark.parametrize("service", ALL_SERVICES)
+async def test_service_unknown_device_raises(
+    hass: HomeAssistant,
+    mock_config_data: dict,
+    mock_all_data: dict,
+    service: str,
+) -> None:
+    """Test every service raises a translated error for an unknown device."""
+    from homeassistant.exceptions import HomeAssistantError
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    entry = MockConfigEntry(domain=DOMAIN, data=mock_config_data, unique_id="test123")
+    entry.add_to_hass(hass)
+
+    with patch("custom_components.homevolt_local.HomevoltApi", autospec=True) as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api.test_connection = AsyncMock(return_value=True)
+        mock_api.get_all_data = AsyncMock(return_value=mock_all_data)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                DOMAIN, service, _service_data(service, "no-such-device"), blocking=True
+            )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "device_not_found"
+
+
+async def test_service_device_without_homevolt_entry_raises(
+    hass: HomeAssistant,
+    mock_config_data: dict,
+    mock_all_data: dict,
+) -> None:
+    """Test a device that belongs to no Homevolt config entry raises a translated error."""
+    from homeassistant.exceptions import HomeAssistantError
+    from homeassistant.helpers import device_registry as dr
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    entry = MockConfigEntry(domain=DOMAIN, data=mock_config_data, unique_id="test123")
+    entry.add_to_hass(hass)
+    other = MockConfigEntry(domain="other_domain")
+    other.add_to_hass(hass)
+
+    with patch("custom_components.homevolt_local.HomevoltApi", autospec=True) as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api.test_connection = AsyncMock(return_value=True)
+        mock_api.get_all_data = AsyncMock(return_value=mock_all_data)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        foreign = dr.async_get(hass).async_get_or_create(
+            config_entry_id=other.entry_id, identifiers={("other_domain", "x")}
+        )
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                DOMAIN, SERVICE_CLEAR_SCHEDULE, {"device_id": foreign.id}, blocking=True
+            )
+
+    assert exc_info.value.translation_key == "config_entry_not_found"
