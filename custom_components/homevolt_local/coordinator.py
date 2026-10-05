@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import HomevoltApi, HomevoltApiError, HomevoltAuthError
+from .api import HomevoltApi, HomevoltApiError, HomevoltAuthError, HomevoltRateLimitError
 from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -152,5 +152,14 @@ class HomevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="invalid_auth",
                 translation_placeholders={"host": self._host},
             ) from err
+        except HomevoltRateLimitError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+            ) from err
         except HomevoltApiError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": self._host},
+            ) from err

@@ -4,9 +4,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from custom_components.homevolt_local.api import HomevoltApiError
+from custom_components.homevolt_local.api import HomevoltApiError, HomevoltRateLimitError
 from custom_components.homevolt_local.coordinator import (
     HOSTNAME_PATTERN,
     HomevoltCoordinator,
@@ -189,6 +190,28 @@ class TestHomevoltCoordinator:
 
         with pytest.raises(UpdateFailed):
             await coordinator._async_update_data()
+
+    async def test_async_update_data_rate_limit_triggers_reauth(
+        self, coordinator: HomevoltCoordinator, mock_api: MagicMock
+    ) -> None:
+        """Test rate limit error raises ConfigEntryAuthFailed with translation."""
+        mock_api.get_all_data = AsyncMock(side_effect=HomevoltRateLimitError("429"))
+
+        with pytest.raises(ConfigEntryAuthFailed) as exc_info:
+            await coordinator._async_update_data()
+
+        assert exc_info.value.translation_key == "rate_limited"
+
+    async def test_async_update_data_api_error_is_translated(
+        self, coordinator: HomevoltCoordinator, mock_api: MagicMock
+    ) -> None:
+        """Test generic API errors raise UpdateFailed with a translation key."""
+        mock_api.get_all_data = AsyncMock(side_effect=HomevoltApiError("boom"))
+
+        with pytest.raises(UpdateFailed) as exc_info:
+            await coordinator._async_update_data()
+
+        assert exc_info.value.translation_key == "cannot_connect"
 
     async def test_device_id_uses_data_when_available(
         self, coordinator: HomevoltCoordinator
