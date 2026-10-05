@@ -1543,7 +1543,9 @@ class TestTotalIncreasingProtection:
         return sensor
 
     def test_suppresses_value_decrease(
-        self, mock_coordinator: MagicMock, energy_consumed_description: HomevoltSensorEntityDescription
+        self,
+        mock_coordinator: MagicMock,
+        energy_consumed_description: HomevoltSensorEntityDescription,
     ) -> None:
         """Test that a value decrease on TOTAL_INCREASING returns None."""
         sensor = self._make_sensor(mock_coordinator, energy_consumed_description)
@@ -1555,60 +1557,76 @@ class TestTotalIncreasingProtection:
         sensor._last_valid_value = 16000.0
 
         # Second reading: 8000 kWh (one unit dropped out)
-        with patch.object(type(sensor), "_get_data", return_value={
-            "ems": [{"ems_data": {"energy_consumed": 8000000}}]
-        }):
+        with patch.object(
+            type(sensor),
+            "_get_data",
+            return_value={"ems": [{"ems_data": {"energy_consumed": 8000000}}]},
+        ):
             value = sensor.native_value
         assert value is None  # Suppressed
 
     def test_allows_value_increase(
-        self, mock_coordinator: MagicMock, energy_consumed_description: HomevoltSensorEntityDescription
+        self,
+        mock_coordinator: MagicMock,
+        energy_consumed_description: HomevoltSensorEntityDescription,
     ) -> None:
         """Test that a value increase on TOTAL_INCREASING is accepted."""
         sensor = self._make_sensor(mock_coordinator, energy_consumed_description)
         sensor._last_valid_value = 16000.0
 
         # Value increased
-        with patch.object(type(sensor), "_get_data", return_value={
-            "ems": [{"ems_data": {"energy_consumed": 17000000}}]
-        }):
+        with patch.object(
+            type(sensor),
+            "_get_data",
+            return_value={"ems": [{"ems_data": {"energy_consumed": 17000000}}]},
+        ):
             value = sensor.native_value
         assert value == 17000.0
         assert sensor._last_valid_value == 17000.0
 
     def test_accepts_first_value(
-        self, mock_coordinator: MagicMock, energy_consumed_description: HomevoltSensorEntityDescription
+        self,
+        mock_coordinator: MagicMock,
+        energy_consumed_description: HomevoltSensorEntityDescription,
     ) -> None:
         """Test that the first value is always accepted (no previous to compare)."""
         sensor = self._make_sensor(mock_coordinator, energy_consumed_description)
         assert sensor._last_valid_value is None
 
-        with patch.object(type(sensor), "_get_data", return_value={
-            "ems": [{"ems_data": {"energy_consumed": 8000000}}]
-        }):
+        with patch.object(
+            type(sensor),
+            "_get_data",
+            return_value={"ems": [{"ems_data": {"energy_consumed": 8000000}}]},
+        ):
             value = sensor.native_value
         assert value == 8000.0
         assert sensor._last_valid_value == 8000.0
 
     def test_recovers_after_suppression(
-        self, mock_coordinator: MagicMock, energy_consumed_description: HomevoltSensorEntityDescription
+        self,
+        mock_coordinator: MagicMock,
+        energy_consumed_description: HomevoltSensorEntityDescription,
     ) -> None:
         """Test that value recovers correctly after suppression."""
         sensor = self._make_sensor(mock_coordinator, energy_consumed_description)
         sensor._last_valid_value = 16000.0
 
         # Drop (suppressed)
-        with patch.object(type(sensor), "_get_data", return_value={
-            "ems": [{"ems_data": {"energy_consumed": 8000000}}]
-        }):
+        with patch.object(
+            type(sensor),
+            "_get_data",
+            return_value={"ems": [{"ems_data": {"energy_consumed": 8000000}}]},
+        ):
             value = sensor.native_value
         assert value is None
         assert sensor._last_valid_value == 16000.0  # Unchanged
 
         # Recovery - value exceeds last valid
-        with patch.object(type(sensor), "_get_data", return_value={
-            "ems": [{"ems_data": {"energy_consumed": 16500000}}]
-        }):
+        with patch.object(
+            type(sensor),
+            "_get_data",
+            return_value={"ems": [{"ems_data": {"energy_consumed": 16500000}}]},
+        ):
             value = sensor.native_value
         assert value == 16500.0
         assert sensor._last_valid_value == 16500.0
@@ -1621,23 +1639,23 @@ class TestTotalIncreasingProtection:
         sensor._last_valid_value = 75.0
 
         # SOC decrease is normal (battery discharging), should not be suppressed
-        with patch.object(type(sensor), "_get_data", return_value={
-            "ems": [{"ems_data": {"soc_avg": 7000}}]
-        }):
+        with patch.object(
+            type(sensor), "_get_data", return_value={"ems": [{"ems_data": {"soc_avg": 7000}}]}
+        ):
             value = sensor.native_value
         assert value == 70.0  # Not suppressed
 
     def test_none_value_not_tracked(
-        self, mock_coordinator: MagicMock, energy_consumed_description: HomevoltSensorEntityDescription
+        self,
+        mock_coordinator: MagicMock,
+        energy_consumed_description: HomevoltSensorEntityDescription,
     ) -> None:
         """Test that None values don't update _last_valid_value."""
         sensor = self._make_sensor(mock_coordinator, energy_consumed_description)
         sensor._last_valid_value = 16000.0
 
         # API returns None (missing data)
-        with patch.object(type(sensor), "_get_data", return_value={
-            "ems": [{"ems_data": {}}]
-        }):
+        with patch.object(type(sensor), "_get_data", return_value={"ems": [{"ems_data": {}}]}):
             value = sensor.native_value
         assert value is None
         assert sensor._last_valid_value == 16000.0  # Unchanged

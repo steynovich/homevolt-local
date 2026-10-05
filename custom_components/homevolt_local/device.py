@@ -34,6 +34,30 @@ def get_local_ems(data: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def get_ems_by_ecu_id(data: dict[str, Any], ecu_id: str) -> dict[str, Any]:
+    """Get the EMS entry with the given ecu_id (list order is not stable)."""
+    ems_list = data.get("ems", [])
+    if isinstance(ems_list, list):
+        for ems in ems_list:
+            if isinstance(ems, dict) and ems.get("ecu_id") == ecu_id:
+                return ems
+    return {}
+
+
+def get_follower_ecu_ids(data: dict[str, Any], own_id: str) -> list[str]:
+    """Return ecu_ids of other units in the ems list, in first-seen order."""
+    ems_list = data.get("ems", []) if data else []
+    ids: list[str] = []
+    if isinstance(ems_list, list):
+        for ems in ems_list:
+            if not isinstance(ems, dict):
+                continue
+            ecu_id = ems.get("ecu_id")
+            if ecu_id and ecu_id != own_id and ems.get("ecu_host") and ecu_id not in ids:
+                ids.append(ecu_id)
+    return ids
+
+
 def get_ecu_device_info(coordinator: HomevoltCoordinator) -> DeviceInfo:
     """Get device info for the ECU device."""
     return DeviceInfo(
