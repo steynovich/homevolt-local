@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HomevoltConfigEntry
+from ._compat import ButtonDeviceClass
 from .coordinator import HomevoltCoordinator
 from .device import get_ecu_device_info
 from .errors import translate_api_errors

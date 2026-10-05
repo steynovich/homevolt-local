@@ -147,6 +147,10 @@ These are the details that cost time when unknown:
   the suite fails. State-based icons go in `icons.json`.
 - Raise user-facing errors as `HomeAssistantError`/`ConfigEntry*` with `translation_domain=DOMAIN` and
   a `translation_key`, never bare strings.
+- **HA version compatibility lives in `_compat.py`.** `vol` (probatio on HA ≥ 2026.9, voluptuous before)
+  and the button/binary-sensor `DeviceClass` enums (moved to `const` in 2026.10) are imported from there.
+  Types are checked against the newest HA (CI installs unpinned, so that includes betas); runtime falls
+  back for the older versions down to the `hacs.json` minimum. Don't import `voluptuous` directly.
 - Release bump touches both `manifest.json` and `pyproject.toml` (`version`), which are kept in sync.
 - `tests/` mirrors the module layout one-to-one; shared device payload fixtures live in
   `tests/conftest.py` (`mock_ems_data`, `mock_ems_data_leader`, `mock_all_data`, …) — extend those

@@ -26,6 +26,12 @@
       },
       "lte_connected": {
         "default": "mdi:signal-5g"
+      },
+      "alarm": {
+        "default": "mdi:check-circle",
+        "state": {
+          "on": "mdi:alert-circle"
+        }
       }
     },
     "sensor": {

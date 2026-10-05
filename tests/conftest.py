@@ -78,6 +78,9 @@ def mock_ems_data() -> dict:
                     "energy_produced": 10000000,  # Wh
                     "energy_consumed": 8000000,  # Wh
                     "state_str": "discharging",
+                    "alarm_str": [],
+                    "warning_str": [],
+                    "info_str": [],
                 },
                 "ems_info": {
                     "capacity": 10000,  # Wh

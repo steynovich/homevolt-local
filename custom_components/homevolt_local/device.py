@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -22,6 +22,16 @@ class DeviceType(Enum):
 
     ECU = "ecu"
     CLUSTER = "cluster"
+
+
+def get_local_ems(data: dict[str, Any]) -> dict[str, Any]:
+    """Get local EMS entry (where ecu_host is empty)."""
+    ems_list = data.get("ems", [])
+    if isinstance(ems_list, list):
+        for ems in ems_list:
+            if isinstance(ems, dict) and not ems.get("ecu_host"):
+                return ems
+    return {}
 
 
 def get_ecu_device_info(coordinator: HomevoltCoordinator) -> DeviceInfo:

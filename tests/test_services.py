@@ -3,9 +3,9 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-import voluptuous as vol
 from homeassistant.core import HomeAssistant
 
+from custom_components.homevolt_local._compat import vol
 from custom_components.homevolt_local.api import HomevoltCommandError
 from custom_components.homevolt_local.const import DOMAIN
 from custom_components.homevolt_local.services import (

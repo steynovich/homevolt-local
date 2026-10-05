@@ -7,11 +7,13 @@ from homeassistant.const import EntityCategory
 
 from custom_components.homevolt_local.binary_sensor import (
     BINARY_SENSORS,
+    AlarmBinarySensor,
     PARALLEL_UPDATES,
     HomevoltBinarySensor,
     LTEConnectedBinarySensor,
     WiFiConnectedBinarySensor,
     _get_param_bool,
+    async_setup_entry,
 )
 
 
@@ -318,3 +320,93 @@ class TestLTEConnectedBinarySensor:
         sensor = LTEConnectedBinarySensor(coordinator)
 
         assert sensor.unique_id == "test123_lte_connected"
+
+
+def _alarm_sensor(ems_data: dict, ecu_host: str = "") -> AlarmBinarySensor:
+    coordinator = MagicMock()
+    coordinator.device_id = "test123"
+    coordinator.device_name = "Test Homevolt"
+    coordinator.firmware_version = "1.0.0"
+    coordinator.data = {"ems": [{"ecu_host": ecu_host, "ems_data": ems_data}]}
+    return AlarmBinarySensor(coordinator)
+
+
+class TestAlarmBinarySensor:
+    """Test AlarmBinarySensor entity."""
+
+    def test_attributes(self) -> None:
+        """Test static entity properties."""
+        sensor = _alarm_sensor({"alarm_str": []})
+        assert sensor.unique_id == "test123_alarm"
+        assert sensor.device_class == BinarySensorDeviceClass.PROBLEM
+        assert sensor.entity_category is None
+        assert sensor.translation_key == "alarm"
+        assert ("homevolt_local", "test123") in sensor.device_info["identifiers"]
+
+    def test_off_when_no_alarms(self) -> None:
+        """Test empty alarm list gives off with empty attributes."""
+        sensor = _alarm_sensor({"alarm_str": [], "warning_str": [], "info_str": []})
+        assert sensor.is_on is False
+        assert sensor.available is True
+        assert sensor.extra_state_attributes == {"alarms": [], "warnings": [], "info": []}
+
+    def test_on_with_alarms(self) -> None:
+        """Test active alarms give on and are listed."""
+        sensor = _alarm_sensor({"alarm_str": ["Battery overtemp", "Grid fault"]})
+        assert sensor.is_on is True
+        assert sensor.extra_state_attributes["alarms"] == ["Battery overtemp", "Grid fault"]
+
+    def test_warnings_and_info_do_not_affect_state(self) -> None:
+        """Test warnings/info are attributes only."""
+        sensor = _alarm_sensor(
+            {"alarm_str": [], "warning_str": ["Low SOC"], "info_str": ["Firmware update"]}
+        )
+        assert sensor.is_on is False
+        assert sensor.extra_state_attributes == {
+            "alarms": [],
+            "warnings": ["Low SOC"],
+            "info": ["Firmware update"],
+        }
+
+    def test_unavailable_when_alarm_str_missing(self) -> None:
+        """Test missing alarm_str makes the entity unavailable."""
+        sensor = _alarm_sensor({})
+        assert sensor.is_on is None
+        assert sensor.available is False
+
+    def test_unavailable_when_alarm_str_not_list(self) -> None:
+        """Test non-list alarm_str makes the entity unavailable."""
+        sensor = _alarm_sensor({"alarm_str": "not a list"})
+        assert sensor.is_on is None
+        assert sensor.available is False
+
+    def test_invalid_warnings_and_info_stay_lists(self) -> None:
+        """Test bad warning/info values do not affect availability."""
+        sensor = _alarm_sensor({"alarm_str": ["x"], "warning_str": "bad", "info_str": None})
+        assert sensor.available is True
+        assert sensor.extra_state_attributes["warnings"] == []
+        assert sensor.extra_state_attributes["info"] == []
+
+    def test_follower_entry_ignored(self) -> None:
+        """Test only the local unit (empty ecu_host) is read."""
+        sensor = _alarm_sensor({"alarm_str": ["remote"]}, ecu_host="10.0.0.2")
+        assert sensor.available is False
+
+
+async def test_alarm_sensor_only_added_once_on_leader() -> None:
+    """Test the alarm sensor is created once, on the ECU device, even for a leader."""
+    coordinator = MagicMock()
+    coordinator.device_id = "test123"
+    coordinator.cluster_id = "cluster123"
+    coordinator.is_leader = True
+    coordinator.data = {"ems": []}
+    entry = MagicMock()
+    entry.runtime_data = coordinator
+    added: list = []
+
+    await async_setup_entry(MagicMock(), entry, added.extend)
+
+    alarms = [e for e in added if isinstance(e, AlarmBinarySensor)]
+    assert len(alarms) == 1
+    assert alarms[0].unique_id == "test123_alarm"
+    assert not any("cluster123" in (e.unique_id or "") for e in added)

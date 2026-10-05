@@ -377,6 +377,9 @@
       },
       "lte_connected": {
         "name": "LTE ansluten"
+      },
+      "alarm": {
+        "name": "Larm"
       }
     },
     "sensor": {

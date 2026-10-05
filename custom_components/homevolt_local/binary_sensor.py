@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -17,8 +16,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HomevoltConfigEntry
+from ._compat import BinarySensorDeviceClass
 from .coordinator import HomevoltCoordinator
-from .device import get_ecu_device_info
+from .device import get_ecu_device_info, get_local_ems
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +73,9 @@ async def async_setup_entry(
     # Add WiFi and LTE connected sensors (uses status.wifi_status and status.lte_status)
     entities.append(WiFiConnectedBinarySensor(coordinator))
     entities.append(LTEConnectedBinarySensor(coordinator))
+
+    # Alarm sensor is per-unit (ECU only, never on the cluster device)
+    entities.append(AlarmBinarySensor(coordinator))
 
     async_add_entities(entities)
 
@@ -169,3 +172,54 @@ class LTEConnectedBinarySensor(CoordinatorEntity[HomevoltCoordinator], BinarySen
         if operator_name:
             return {"operator": operator_name}
         return None
+
+
+def _string_list(value: Any) -> list[str]:
+    """Return value if it is a list, otherwise an empty list."""
+    return list(value) if isinstance(value, list) else []
+
+
+class AlarmBinarySensor(CoordinatorEntity[HomevoltCoordinator], BinarySensorEntity):
+    """Problem sensor that is on while the local unit reports active alarms.
+
+    Warnings and info messages are exposed as attributes only and do not
+    influence the state.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "alarm"
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(self, coordinator: HomevoltCoordinator) -> None:
+        """Initialize the alarm sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device_id}_alarm"
+        self._attr_device_info = get_ecu_device_info(coordinator)
+
+    def _ems_data(self) -> dict[str, Any]:
+        """Return ems_data of the local unit."""
+        ems_data = get_local_ems(self.coordinator.data).get("ems_data", {})
+        return ems_data if isinstance(ems_data, dict) else {}
+
+    @property
+    def available(self) -> bool:
+        """Return False when the device does not report a valid alarm list."""
+        return super().available and isinstance(self._ems_data().get("alarm_str"), list)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if at least one alarm is active."""
+        alarms = self._ems_data().get("alarm_str")
+        if not isinstance(alarms, list):
+            return None
+        return len(alarms) > 0
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the active alarms, warnings and info messages."""
+        ems_data = self._ems_data()
+        return {
+            "alarms": _string_list(ems_data.get("alarm_str")),
+            "warnings": _string_list(ems_data.get("warning_str")),
+            "info": _string_list(ems_data.get("info_str")),
+        }

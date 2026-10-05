@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -14,6 +13,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from ._compat import vol
 from .api import HomevoltApi, HomevoltAuthError, HomevoltConnectionError, HomevoltRateLimitError
 from .const import DOMAIN
 from .coordinator import _extract_device_id_from_host, _extract_ecu_id

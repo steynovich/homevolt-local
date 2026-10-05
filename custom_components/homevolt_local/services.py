@@ -7,12 +7,12 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, cast
 
-import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 
+from ._compat import vol
 from .api import HomevoltApi
 from .const import DOMAIN
 from .coordinator import HomevoltCoordinator

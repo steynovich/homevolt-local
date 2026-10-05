@@ -377,6 +377,9 @@
       },
       "lte_connected": {
         "name": "LTE connected"
+      },
+      "alarm": {
+        "name": "Alarm"
       }
     },
     "sensor": {

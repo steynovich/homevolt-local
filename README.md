@@ -146,6 +146,7 @@ If your Homevolt device broadcasts mDNS (hostname starting with `homevolt`), Hom
 | MQTT Valid | MQTT connection status | Diagnostic |
 | WiFi Valid | WiFi connection status | Diagnostic |
 | LTE Valid | LTE/cellular connection status | Diagnostic |
+| Alarm | On while the unit reports active alarms (problem). Attributes `alarms`, `warnings` and `info` list the messages; only alarms affect the state. Per unit, not on the cluster device | - |
 
 ### Switches
 

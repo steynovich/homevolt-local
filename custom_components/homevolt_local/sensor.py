@@ -31,7 +31,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HomevoltConfigEntry
 from .coordinator import HomevoltCoordinator
-from .device import DeviceType, get_cluster_device_info, get_ecu_device_info
+from .device import DeviceType, get_cluster_device_info, get_ecu_device_info, get_local_ems
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,16 +115,6 @@ def _get_sensor_by_type(data: dict[str, Any], sensor_type: str) -> dict[str, Any
         for sensor in sensors:
             if isinstance(sensor, dict) and sensor.get("type") == sensor_type:
                 return sensor
-    return {}
-
-
-def _get_local_ems(data: dict[str, Any]) -> dict[str, Any]:
-    """Get local EMS entry (where ecu_host is empty)."""
-    ems_list = data.get("ems", [])
-    if isinstance(ems_list, list):
-        for ems in ems_list:
-            if isinstance(ems, dict) and not ems.get("ecu_host"):
-                return ems
     return {}
 
 
@@ -348,7 +338,7 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         translation_key="firmware_version",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_type=DeviceType.ECU,
-        value_fn=lambda data: _get_local_ems(data).get("ems_info", {}).get("fw_version"),
+        value_fn=lambda data: get_local_ems(data).get("ems_info", {}).get("fw_version"),
     ),
     # Alarm messages - length of alarm_str list from local EMS entry
     HomevoltSensorEntityDescription(
@@ -358,10 +348,10 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_type=DeviceType.ECU,
         value_fn=lambda data: _list_length_or_none(
-            _get_local_ems(data).get("ems_data", {}).get("alarm_str")
+            get_local_ems(data).get("ems_data", {}).get("alarm_str")
         ),
         attributes_fn=lambda data: {
-            "messages": _get_local_ems(data).get("ems_data", {}).get("alarm_str"),
+            "messages": get_local_ems(data).get("ems_data", {}).get("alarm_str"),
         },
     ),
     # Warning messages - length of warning_str list from local EMS entry
@@ -372,10 +362,10 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_type=DeviceType.ECU,
         value_fn=lambda data: _list_length_or_none(
-            _get_local_ems(data).get("ems_data", {}).get("warning_str")
+            get_local_ems(data).get("ems_data", {}).get("warning_str")
         ),
         attributes_fn=lambda data: {
-            "messages": _get_local_ems(data).get("ems_data", {}).get("warning_str"),
+            "messages": get_local_ems(data).get("ems_data", {}).get("warning_str"),
         },
     ),
     # Info messages - length of info_str list from local EMS entry
@@ -386,10 +376,10 @@ EMS_SENSORS: tuple[HomevoltSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_type=DeviceType.ECU,
         value_fn=lambda data: _list_length_or_none(
-            _get_local_ems(data).get("ems_data", {}).get("info_str")
+            get_local_ems(data).get("ems_data", {}).get("info_str")
         ),
         attributes_fn=lambda data: {
-            "messages": _get_local_ems(data).get("ems_data", {}).get("info_str"),
+            "messages": get_local_ems(data).get("ems_data", {}).get("info_str"),
         },
     ),
     # Rated power from individual ECU's ems_info
