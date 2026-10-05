@@ -81,7 +81,7 @@ async def async_setup_entry(
     entities.append(AlarmBinarySensor(coordinator))
     entities.extend(
         AlarmBinarySensor(coordinator, ecu_id=ecu_id)
-        for ecu_id in get_follower_ecu_ids(coordinator.data, coordinator.device_id)
+        for ecu_id in get_follower_ecu_ids(coordinator.data.get("ems", {}), coordinator.device_id)
     )
 
     async_add_entities(entities)
@@ -220,10 +220,11 @@ class AlarmBinarySensor(CoordinatorEntity[HomevoltCoordinator], BinarySensorEnti
 
     def _ems_data(self) -> dict[str, Any]:
         """Return ems_data of the unit this sensor represents."""
+        ems_payload = self.coordinator.data.get("ems", {}) if self.coordinator.data else {}
         if self._ecu_id is None:
-            unit = get_local_ems(self.coordinator.data)
+            unit = get_local_ems(ems_payload)
         else:
-            unit = get_ems_by_ecu_id(self.coordinator.data, self._ecu_id)
+            unit = get_ems_by_ecu_id(ems_payload, self._ecu_id)
         ems_data = unit.get("ems_data", {})
         return ems_data if isinstance(ems_data, dict) else {}
 

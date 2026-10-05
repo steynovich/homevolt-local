@@ -327,7 +327,7 @@ def _alarm_sensor(ems_data: dict, ecu_host: str = "") -> AlarmBinarySensor:
     coordinator.device_id = "test123"
     coordinator.device_name = "Test Homevolt"
     coordinator.firmware_version = "1.0.0"
-    coordinator.data = {"ems": [{"ecu_host": ecu_host, "ems_data": ems_data}]}
+    coordinator.data = {"ems": {"ems": [{"ecu_host": ecu_host, "ems_data": ems_data}]}}
     return AlarmBinarySensor(coordinator)
 
 
@@ -399,7 +399,7 @@ async def test_alarm_sensor_only_added_once_on_leader() -> None:
     coordinator.device_id = "test123"
     coordinator.cluster_id = "cluster123"
     coordinator.is_leader = True
-    coordinator.data = {"ems": []}
+    coordinator.data = {"ems": {"ems": []}}
     entry = MagicMock()
     entry.runtime_data = coordinator
     added: list = []
@@ -419,7 +419,7 @@ def _leader_coordinator(units: list[dict]) -> MagicMock:
     coordinator.firmware_version = "1.0.0"
     coordinator.cluster_id = "test123_cluster"
     coordinator.is_leader = len(units) > 1
-    coordinator.data = {"ems": units}
+    coordinator.data = {"ems": {"ems": units}}
     return coordinator
 
 
