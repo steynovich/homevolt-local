@@ -12,15 +12,16 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HomevoltConfigEntry
 from ._compat import BinarySensorDeviceClass
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import DOMAIN
 from .coordinator import HomevoltCoordinator
-from .device import get_ecu_device_info, get_ems_by_ecu_id, get_follower_ecu_ids, get_local_ems
+from .device import get_ecu_device_info, get_local_ems
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,15 +77,39 @@ async def async_setup_entry(
     entities.append(WiFiConnectedBinarySensor(coordinator))
     entities.append(LTEConnectedBinarySensor(coordinator))
 
-    # Alarm sensors are per-unit (ECU only, never on the cluster device): one for the
-    # local unit plus one per follower listed in a leader's ems list, keyed by ecu_id.
+    # Alarm sensors are per unit: each Homevolt reports its own, on its own device. A leader's
+    # follower units get theirs from their own config entry.
     entities.append(AlarmBinarySensor(coordinator))
-    entities.extend(
-        AlarmBinarySensor(coordinator, ecu_id=ecu_id)
-        for ecu_id in get_follower_ecu_ids(coordinator.data.get("ems", {}), coordinator.device_id)
-    )
 
     async_add_entities(entities)
+    _async_remove_follower_alarms(hass, entry, coordinator.device_id)
+
+
+def _async_remove_follower_alarms(
+    hass: HomeAssistant, entry: HomevoltConfigEntry, own_id: str
+) -> None:
+    """Remove the follower Alarm sensors (and their devices) older versions added to a leader.
+
+    They had unique IDs ``{leader_id}_{ecu_id}_alarm`` and sat on a device keyed by the
+    follower's ecu_id, which HA never merged with the follower's own device.
+    """
+    entity_registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if (
+            entity.domain == "binary_sensor"
+            and entity.unique_id.startswith(f"{own_id}_")
+            and entity.unique_id.endswith("_alarm")
+            and entity.unique_id != f"{own_id}_alarm"
+        ):
+            entity_registry.async_remove(entity.entity_id)
+
+    device_registry = dr.async_get(hass)
+    kept = {(DOMAIN, own_id), (DOMAIN, f"{own_id}_cluster")}
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if not device.identifiers & kept and not er.async_entries_for_device(
+            entity_registry, device.id
+        ):
+            device_registry.async_remove_device(device.id)
 
 
 class HomevoltBinarySensor(CoordinatorEntity[HomevoltCoordinator], BinarySensorEntity):
@@ -187,11 +212,7 @@ def _string_list(value: Any) -> list[str]:
 
 
 class AlarmBinarySensor(CoordinatorEntity[HomevoltCoordinator], BinarySensorEntity):
-    """Problem sensor that is on while a unit reports active alarms.
-
-    Without ``ecu_id`` it reads the local unit. With ``ecu_id`` (leader only) it reads
-    the ems entry with that ecu_id, never by list position, and is attached to the
-    device with that ecu_id so it merges with the follower's own config entry.
+    """Problem sensor that is on while the unit reports active alarms.
 
     Warnings and info messages are exposed as attributes only and do not
     influence the state.
@@ -201,31 +222,16 @@ class AlarmBinarySensor(CoordinatorEntity[HomevoltCoordinator], BinarySensorEnti
     _attr_translation_key = "alarm"
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
-    def __init__(self, coordinator: HomevoltCoordinator, ecu_id: str | None = None) -> None:
+    def __init__(self, coordinator: HomevoltCoordinator) -> None:
         """Initialize the alarm sensor."""
         super().__init__(coordinator)
-        self._ecu_id = ecu_id
-        if ecu_id is None:
-            self._attr_unique_id = f"{coordinator.device_id}_alarm"
-            self._attr_device_info = get_ecu_device_info(coordinator)
-        else:
-            # Distinct from the follower's own "{ecu_id}_alarm" so both entries can coexist.
-            self._attr_unique_id = f"{coordinator.device_id}_{ecu_id}_alarm"
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, ecu_id)},
-                name=f"Homevolt {ecu_id}",
-                manufacturer=MANUFACTURER,
-                model=MODEL,
-            )
+        self._attr_unique_id = f"{coordinator.device_id}_alarm"
+        self._attr_device_info = get_ecu_device_info(coordinator)
 
     def _ems_data(self) -> dict[str, Any]:
-        """Return ems_data of the unit this sensor represents."""
+        """Return ems_data of the local unit."""
         ems_payload = self.coordinator.data.get("ems", {}) if self.coordinator.data else {}
-        if self._ecu_id is None:
-            unit = get_local_ems(ems_payload)
-        else:
-            unit = get_ems_by_ecu_id(ems_payload, self._ecu_id)
-        ems_data = unit.get("ems_data", {})
+        ems_data = get_local_ems(ems_payload).get("ems_data", {})
         return ems_data if isinstance(ems_data, dict) else {}
 
     @property

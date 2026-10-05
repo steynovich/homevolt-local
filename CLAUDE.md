@@ -92,16 +92,13 @@ a module-level tuple of descriptions, and one `CoordinatorEntity` class that rea
 - Entities are created unconditionally and report unavailable when data is missing — except external
   grid/solar/load sensors, which are only added if `_has_external_sensor()` finds that `type` in
   `ems.sensors` at setup time.
-- `AlarmBinarySensor` (`binary_sensor.py`) is per unit and never on the Cluster device. It is on while
-  `ems_data.alarm_str` is non-empty and unavailable when that isn't a list. `warning_str` and `info_str`
-  are attributes only.
-  - On a leader, setup adds one extra Alarm sensor for each other `ecu_id` in the `ems` list
-    (`get_follower_ecu_ids`), which reads its unit with `get_ems_by_ecu_id`. Match by `ecu_id`, never by
-    list position.
-  - Its unique ID is `{leader_id}_{ecu_id}_alarm`, which differs from the follower's own
-    `{ecu_id}_alarm` so the two can coexist. It attaches to the device with identifier
-    `(DOMAIN, ecu_id)`, so it merges with the follower's own config entry if that exists.
-  - The follower set is fixed at setup time. A follower that joins later needs a reload.
+- `AlarmBinarySensor` (`binary_sensor.py`) is per unit, on that unit's own ECU device, never on the
+  Cluster device. It is on while the local `ems_data.alarm_str` is non-empty and unavailable when that
+  isn't a list. `warning_str` and `info_str` are attributes only.
+  - A leader deliberately does **not** add alarm sensors for its followers. HA scopes devices to a
+    config entry, so an entity from the leader's entry can't join the follower's own device; each
+    follower reports its alarms through its own config entry. Setup removes the follower alarm
+    entities and devices (`{leader_id}_{ecu_id}_alarm`) that earlier versions created.
 - `TOTAL_INCREASING` sensors return `None` instead of any value below `_last_valid_value`. This
   prevents HA statistics corruption when an offline cluster member makes aggregated energy totals dip.
   Preserve this guard when touching `native_value`.
