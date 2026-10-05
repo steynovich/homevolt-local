@@ -88,6 +88,9 @@
     },
     "config_entry_not_found": {
       "message": "Fant ingen Homevolt-konfigurasjonsoppføring for enheten {device_id}"
+    },
+    "api_error": {
+      "message": "Forespørselen til enheten mislyktes: {error}"
     }
   },
   "services": {

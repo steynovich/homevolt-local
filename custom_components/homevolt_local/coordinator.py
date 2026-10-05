@@ -118,6 +118,11 @@ class HomevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return None
 
     @property
+    def host(self) -> str:
+        """Return the device host."""
+        return self._host
+
+    @property
     def is_leader(self) -> bool:
         """Return True if this device is a cluster leader.
 

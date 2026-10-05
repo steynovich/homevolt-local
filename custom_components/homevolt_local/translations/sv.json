@@ -88,6 +88,9 @@
     },
     "config_entry_not_found": {
       "message": "Ingen Homevolt-konfigurationspost hittades för enheten {device_id}"
+    },
+    "api_error": {
+      "message": "Begäran till enheten misslyckades: {error}"
     }
   },
   "services": {
