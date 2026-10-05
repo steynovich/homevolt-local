@@ -890,3 +890,63 @@ class TestButtonNotLocalModeError:
         with pytest.raises(HomeAssistantError):
             await button.async_press()
         coordinator.async_request_refresh.assert_not_called()
+
+
+class TestButtonErrorTranslation:
+    """Test buttons translate API errors and refresh only when they should."""
+
+    @staticmethod
+    def _make_coordinator() -> MagicMock:
+        coordinator = MagicMock()
+        coordinator.device_id = "test123"
+        coordinator.device_name = "Test Homevolt"
+        coordinator.firmware_version = "1.0.0"
+        coordinator.host = "homevolt.local"
+        coordinator.data = {}
+        coordinator.api = MagicMock()
+        coordinator.async_request_refresh = AsyncMock()
+        return coordinator
+
+    async def test_reboot_connection_error_is_translated(self) -> None:
+        """Test the reboot button translates connection errors."""
+        from custom_components.homevolt_local.api import HomevoltConnectionError
+
+        coordinator = self._make_coordinator()
+        coordinator.api.reboot = AsyncMock(side_effect=HomevoltConnectionError("down"))
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await HomevoltRebootButton(coordinator).async_press()
+
+        assert exc_info.value.translation_key == "cannot_connect"
+        assert exc_info.value.translation_placeholders == {"host": "homevolt.local"}
+        coordinator.async_request_refresh.assert_not_awaited()
+
+    async def test_reboot_does_not_refresh(self) -> None:
+        """Test the reboot button doesn't refresh a device that is going down."""
+        coordinator = self._make_coordinator()
+        coordinator.api.reboot = AsyncMock(return_value={})
+
+        await HomevoltRebootButton(coordinator).async_press()
+
+        coordinator.async_request_refresh.assert_not_awaited()
+
+    async def test_command_error_is_translated(self) -> None:
+        """Test a failing console command is translated for set_* buttons."""
+        from custom_components.homevolt_local.api import HomevoltCommandError
+
+        coordinator = self._make_coordinator()
+        coordinator.api.set_charge = AsyncMock(side_effect=HomevoltCommandError("nope"))
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await HomevoltSetChargeButton(coordinator).async_press()
+
+        assert exc_info.value.translation_key == "command_failed"
+
+    async def test_success_refreshes(self) -> None:
+        """Test a successful press refreshes the coordinator."""
+        coordinator = self._make_coordinator()
+        coordinator.api.clear_schedule = AsyncMock(return_value={})
+
+        await HomevoltClearScheduleButton(coordinator).async_press()
+
+        coordinator.async_request_refresh.assert_awaited_once()

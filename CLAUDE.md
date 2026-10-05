@@ -84,7 +84,9 @@ a module-level tuple of descriptions, and one `CoordinatorEntity` class that rea
   coordinator key is passed in (defaults to `"ems"`).
 - `switch.py` / `number.py` / `select.py` / `binary_sensor.py` — `param_key`, read from
   `data["params"]` and written with `set_param`.
-- `button.py` — one hand-written class per command (no description tuple).
+- `button.py` — one hand-written class per command (no description tuple), all subclassing
+  `HomevoltCommandButton`, which owns unique IDs, API error translation and the post-press refresh.
+  A subclass sets `_attr_translation_key` and implements `_async_run_command`.
 - Every platform sets `PARALLEL_UPDATES = 1`. Unique IDs are `f"{coordinator.device_id}_{key}"`
   (or `cluster_id`).
 - Entities are created unconditionally and report unavailable when data is missing — except external
@@ -96,14 +98,21 @@ a module-level tuple of descriptions, and one `CoordinatorEntity` class that rea
 
 ### Services
 
-`__init__.py` registers 12 services (`clear_schedule`, `set_idle`, `set_charge`, `set_discharge`,
+`services.py` holds the 12 services (`clear_schedule`, `set_idle`, `set_charge`, `set_discharge`,
 `set_grid_charge`, `set_grid_discharge`, `set_grid_charge_discharge`, `set_solar_charge`,
-`set_solar_charge_discharge`, `set_full_solar_export`, `set_schedule`, `reboot`), each guarded by
-`hass.services.has_service()` so re-setup is idempotent. Handlers take a `device_id`, resolve it via
-the device registry to a config entry, use `config_entry.runtime_data` as the coordinator, then
-`async_request_refresh()`. Adding a service means touching four places: the `SERVICE_*` name and
-`vol.Schema`, the handler + registration, an `api.py` method, and `services.yaml` + `strings.json`
-(+ translations).
+`set_solar_charge_discharge`, `set_full_solar_export`, `set_schedule`, `reboot`) in a single
+`SERVICES` registry of `_ServiceSpec(schema, command, refresh)`. `async_setup_services()` registers
+whatever isn't registered yet (idempotent) and `async_unload_services()` removes them all. One shared
+handler resolves `device_id` → config entry → `runtime_data` coordinator (raising translated
+`device_not_found` / `config_entry_not_found` errors, never silently returning), runs the command
+inside `errors.translate_api_errors()`, then `async_request_refresh()` (skipped for `reboot`).
+
+`errors.translate_api_errors(host)` is the one place API exceptions become translated
+`HomeAssistantError`s (`not_local_mode`, `command_failed`, `invalid_auth`, `rate_limited`,
+`cannot_connect`, `api_error`). Services and buttons both use it.
+
+Adding a service means: the `SERVICE_*` name, schema and a `SERVICES` entry in `services.py`, an
+`api.py` method, and `services.yaml` + `strings.json` (+ translations).
 
 Note `set_solar_charge_discharge` and `set_schedule` are service-only; the other ten commands also
 have button entities.
