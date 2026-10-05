@@ -8,9 +8,9 @@ Local API integration for Tibber Homevolt battery systems.
 
 ## Overview
 
-This integration allows you to monitor and control your Homevolt battery system locally without cloud dependencies. It connects directly to your Homevolt device over your local network.
+Monitor and control your Homevolt battery system locally, without cloud dependencies. The integration connects directly to your Homevolt device over your local network.
 
-**Quality Scale:** Platinum tier compliance (strict typing, async dependency injection, full test coverage)
+Quality Scale: Platinum tier compliance (strict typing, async dependency injection, full test coverage)
 
 ## Supported Devices
 
@@ -28,18 +28,18 @@ This integration allows you to monitor and control your Homevolt battery system 
 
 ## Features
 
-- **Battery monitoring**: State of charge, power, energy, temperature
-- **EMS prediction sensors**: Available charge/discharge power and energy
-- **Connectivity status**: MQTT, WiFi, LTE connection monitoring
-- **Battery control services**: Charging, discharging, and grid modes
-- **Quick action buttons**: Common battery operations
-- **LED strip configuration**: Mode, brightness, hue, saturation
-- **Fuse configuration**: Main and group fuse size settings
-- **OTA update control**: Enable/disable firmware updates
-- **Automatic device discovery**: Via Zeroconf/mDNS
-- **Reauthentication flow**: When credentials change
-- **Reconfiguration**: Without removing the device
-- **Diagnostics export**: For debugging and support
+- Battery monitoring: state of charge, power, energy, temperature
+- EMS prediction sensors: available charge/discharge power and energy
+- Connectivity status: MQTT, WiFi, LTE connection monitoring
+- Battery control services: charging, discharging, and grid modes
+- Quick action buttons: common battery operations
+- LED strip configuration: mode, brightness, hue, saturation
+- Fuse configuration: main and group fuse size settings
+- OTA update control: enable/disable firmware updates
+- Automatic device discovery: via Zeroconf/mDNS
+- Reauthentication flow: when credentials change
+- Reconfiguration: without removing the device
+- Diagnostics export: for debugging and support
 
 ## Prerequisites
 
@@ -146,7 +146,7 @@ If your Homevolt device broadcasts mDNS (hostname starting with `homevolt`), Hom
 | MQTT Valid | MQTT connection status | Diagnostic |
 | WiFi Valid | WiFi connection status | Diagnostic |
 | LTE Valid | LTE/cellular connection status | Diagnostic |
-| Alarm | On while the unit reports active alarms (problem). Attributes `alarms`, `warnings` and `info` list the messages; only alarms affect the state. Per unit, not on the cluster device. On a leader, an additional Alarm sensor is created for each follower unit (matched by `ecu_id`) on that follower's device | - |
+| Alarm | On while the unit reports active alarms (problem). The `alarms`, `warnings` and `info` attributes list the messages, and only alarms affect the state. Each unit has its own sensor and the cluster device has none. A leader also gets one for each follower unit (matched by `ecu_id`), shown on that follower's device | - |
 
 ### Switches
 
@@ -617,15 +617,15 @@ Replace `<your_device_id>` with your Homevolt device ID (find it in **Settings**
 - Day-Ahead recalculates and updates setpoints every 15 minutes by default
 - Ensure the "Settings local" switch is enabled on your Homevolt device
 - Positive power values = charging, negative = discharging
-- **Balance switch**: When enabled, uses grid charge/discharge (actively pushes/pulls from grid). When disabled, uses inverter charge/discharge (follows home consumption)
+- Balance switch: when enabled, uses grid charge/discharge (actively pushes/pulls from grid). When disabled, it uses inverter charge/discharge (follows home consumption)
 - The `input_boolean.homevolt_dao_active` helper allows you to disable the bridge automation without removing it
 - See the [Day-Ahead documentation](https://github.com/corneel27/day-ahead) for full configuration options
 
 ## Known Limitations
 
-- **Docker on macOS**: Zeroconf discovery may not work when running Home Assistant in Docker on macOS unless using host networking mode
-- **Rate limiting**: The API has no documented rate limits, but the integration polls every 10 seconds to be conservative
-- **Local mode required**: Battery control services require "Settings local" to be enabled to prevent conflicts with Tibber cloud control
+- Docker on macOS: Zeroconf discovery may not work when running Home Assistant in Docker on macOS unless using host networking mode
+- Rate limiting: the API has no documented rate limits, but the integration polls every 10 seconds to be conservative
+- Local mode required: battery control services require "Settings local" to be enabled to prevent conflicts with Tibber cloud control
 
 ## Resources
 

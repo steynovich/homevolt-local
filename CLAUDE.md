@@ -22,7 +22,7 @@ pytest tests/ --cov=custom_components.homevolt_local --cov-report=term-missing  
 # Lint / typecheck — CI runs exactly these three against custom_components/homevolt_local/
 ruff check custom_components/homevolt_local/
 ruff format --check custom_components/homevolt_local/    # use `ruff format .` to fix
-mypy custom_components/homevolt_local/
+mypy custom_components/homevolt_local/                   # a stale local venv's older HA gives false errors in _compat/services/config_flow; CI is the reference
 
 # Live HA instance at http://localhost:8123 (mounts the component read-write into /config)
 docker compose up -d && docker compose logs -f homeassistant
@@ -92,6 +92,16 @@ a module-level tuple of descriptions, and one `CoordinatorEntity` class that rea
 - Entities are created unconditionally and report unavailable when data is missing — except external
   grid/solar/load sensors, which are only added if `_has_external_sensor()` finds that `type` in
   `ems.sensors` at setup time.
+- `AlarmBinarySensor` (`binary_sensor.py`) is per unit and never on the Cluster device. It is on while
+  `ems_data.alarm_str` is non-empty and unavailable when that isn't a list. `warning_str` and `info_str`
+  are attributes only.
+  - On a leader, setup adds one extra Alarm sensor for each other `ecu_id` in the `ems` list
+    (`get_follower_ecu_ids`), which reads its unit with `get_ems_by_ecu_id`. Match by `ecu_id`, never by
+    list position.
+  - Its unique ID is `{leader_id}_{ecu_id}_alarm`, which differs from the follower's own
+    `{ecu_id}_alarm` so the two can coexist. It attaches to the device with identifier
+    `(DOMAIN, ecu_id)`, so it merges with the follower's own config entry if that exists.
+  - The follower set is fixed at setup time. A follower that joins later needs a reload.
 - `TOTAL_INCREASING` sensors return `None` instead of any value below `_last_valid_value`. This
   prevents HA statistics corruption when an offline cluster member makes aggregated energy totals dip.
   Preserve this guard when touching `native_value`.
@@ -138,6 +148,12 @@ These are the details that cost time when unknown:
   auth makes the device return 429.
 - `const.py` lists more endpoints than the coordinator polls (`/nodes.json`, `/ct.json`,
   `/node_metrics.json`, `/error_report.json`) — available on the API client but unused by entities.
+- **`/error_report.json` differs from the OpenAPI spec.** Real devices return a bare array of
+  per-subsystem health entries (`activated` ok/error/warning/unknown, `message`, `details`) with no
+  severity or numeric error code, so it is deliberately not used for alarms. See
+  `docs/research/error-report-endpoint.md`.
+- **Leader vs follower `/ems.json`.** A leader's lists every unit, each with `ecu_id` and `ecu_host`.
+  A follower's lists only itself.
 
 ## Conventions
 
@@ -164,3 +180,17 @@ These are the details that cost time when unknown:
   [OpenAPI spec](https://github.com/tibber/homevolt-local-api-doc/blob/main/API_DOCUMENTATION.yaml)
 - [HA developer docs](https://developers.home-assistant.io/) ·
   [Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/)
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues (steynovich/homevolt-local) via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
