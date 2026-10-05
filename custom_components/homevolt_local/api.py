@@ -8,7 +8,7 @@ import logging
 import random
 import time
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, NotRequired, Required, TypedDict, cast
 
 import aiohttp
 from aiohttp import BasicAuth, ClientError, ClientResponseError, ClientTimeout
@@ -72,6 +72,31 @@ class HomevoltCommandError(HomevoltApiError):
     """Raised when a device console command fails."""
 
 
+class ScheduleEntry(TypedDict):
+    """A single schedule entry as accepted by `sched_set` / `sched_add`."""
+
+    type: Required[int]
+    from_time: NotRequired[str]
+    to_time: NotRequired[str]
+    min_soc: NotRequired[int]
+    max_soc: NotRequired[int]
+    setpoint: NotRequired[int]
+    max_charge: NotRequired[int]
+    max_discharge: NotRequired[int]
+    import_limit: NotRequired[int]
+    export_limit: NotRequired[int]
+
+
+def _raise_for_auth_status(status: int, url: str, cause: BaseException | None = None) -> None:
+    """Map 401/429 responses to their dedicated, non-retried exceptions."""
+    if status == 401:
+        raise HomevoltAuthError(f"Authentication required for {url}") from cause
+    if status == 429:
+        raise HomevoltRateLimitError(
+            f"Rate limited for {url} (too many failed auth attempts)"
+        ) from cause
+
+
 class HomevoltApi:
     """API client for Homevolt Local."""
 
@@ -129,12 +154,7 @@ class HomevoltApi:
         for attempt in range(retries + 1):
             try:
                 async with session.get(url, **kwargs) as response:
-                    if response.status == 401:
-                        raise HomevoltAuthError(f"Authentication required for {url}")
-                    if response.status == 429:
-                        raise HomevoltRateLimitError(
-                            f"Rate limited for {url} (too many failed auth attempts)"
-                        )
+                    _raise_for_auth_status(response.status, url)
                     if response.status >= 500:
                         raise ClientResponseError(
                             response.request_info,
@@ -148,12 +168,7 @@ class HomevoltApi:
                 # Don't retry auth or rate limit errors
                 raise
             except ClientResponseError as err:
-                if err.status == 401:
-                    raise HomevoltAuthError(f"Authentication required for {url}") from err
-                if err.status == 429:
-                    raise HomevoltRateLimitError(
-                        f"Rate limited for {url} (too many failed auth attempts)"
-                    ) from err
+                _raise_for_auth_status(err.status, url, err)
                 if err.status >= 500:
                     last_error = err
                     # Retry on server errors
@@ -318,12 +333,7 @@ class HomevoltApi:
 
         try:
             async with session.post(url, data=form_data, **kwargs) as response:
-                if response.status == 401:
-                    raise HomevoltAuthError(f"Authentication required for {url}")
-                if response.status == 429:
-                    raise HomevoltRateLimitError(
-                        f"Rate limited for {url} (too many failed auth attempts)"
-                    )
+                _raise_for_auth_status(response.status, url)
                 response.raise_for_status()
                 # Log the response for debugging
                 response_text = await response.text()
@@ -331,12 +341,7 @@ class HomevoltApi:
                     "POST %s response (status=%s): %s", url, response.status, response_text
                 )
         except ClientResponseError as err:
-            if err.status == 401:
-                raise HomevoltAuthError(f"Authentication required for {url}") from err
-            if err.status == 429:
-                raise HomevoltRateLimitError(
-                    f"Rate limited for {url} (too many failed auth attempts)"
-                ) from err
+            _raise_for_auth_status(err.status, url, err)
             raise HomevoltApiError(f"API error {err.status} for {url}") from err
         except (TimeoutError, ClientError) as err:
             raise HomevoltConnectionError(f"Connection error for {url}: {err}") from err
@@ -366,12 +371,7 @@ class HomevoltApi:
 
         try:
             async with session.post(url, data=form_data, **kwargs) as response:
-                if response.status == 401:
-                    raise HomevoltAuthError(f"Authentication required for {url}")
-                if response.status == 429:
-                    raise HomevoltRateLimitError(
-                        f"Rate limited for {url} (too many failed auth attempts)"
-                    )
+                _raise_for_auth_status(response.status, url)
                 if response.status == 400:
                     raise HomevoltApiError(f"Invalid command '{command}' for {url}")
                 response.raise_for_status()
@@ -401,12 +401,7 @@ class HomevoltApi:
                         raise HomevoltCommandError(error_msg) from None
                     return {"command": command, "output": response_text.strip(), "exit_code": 0}
         except ClientResponseError as err:
-            if err.status == 401:
-                raise HomevoltAuthError(f"Authentication required for {url}") from err
-            if err.status == 429:
-                raise HomevoltRateLimitError(
-                    f"Rate limited for {url} (too many failed auth attempts)"
-                ) from err
+            _raise_for_auth_status(err.status, url, err)
             if err.status == 400:
                 raise HomevoltApiError(f"Invalid command '{command}' for {url}") from err
             raise HomevoltApiError(f"API error {err.status} for {url}") from err
@@ -709,11 +704,11 @@ class HomevoltApi:
             cmd += f" --max {max_soc}"
         return await self.send_console_command(cmd)
 
-    def _build_schedule_command(self, entry: dict[str, Any]) -> str:
+    def _build_schedule_command(self, entry: ScheduleEntry) -> str:
         """Build a schedule command string from an entry dict.
 
         Args:
-            entry: Dict with schedule entry parameters:
+            entry: Schedule entry with parameters:
                 - type: Control mode (0-9, required)
                 - from_time: Start time (ISO 8601)
                 - to_time: End time (ISO 8601)
@@ -751,7 +746,7 @@ class HomevoltApi:
 
         return " ".join(parts)
 
-    async def set_schedule(self, entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def set_schedule(self, entries: list[ScheduleEntry]) -> list[dict[str, Any]]:
         """Replace the current schedule with new entries.
 
         Checks that the device is in local mode before sending commands.
@@ -759,7 +754,7 @@ class HomevoltApi:
         then sched_add for subsequent entries.
 
         Args:
-            entries: List of schedule entry dicts. Each entry must have:
+            entries: List of schedule entries. Each entry must have:
                 - type: Control mode (0-9, required)
                 And optionally:
                 - from_time: Start time (ISO 8601)
@@ -779,6 +774,7 @@ class HomevoltApi:
             HomevoltNotLocalModeError: If device is not in local mode
             ValueError: If entries list is empty
         """
+        # The service schema enforces a non-empty list; this only guards direct callers.
         if not entries:
             raise ValueError("Schedule entries list cannot be empty")
 
