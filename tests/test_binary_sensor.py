@@ -410,3 +410,80 @@ async def test_alarm_sensor_only_added_once_on_leader() -> None:
     assert len(alarms) == 1
     assert alarms[0].unique_id == "test123_alarm"
     assert not any("cluster123" in (e.unique_id or "") for e in added)
+
+
+def _leader_coordinator(units: list[dict]) -> MagicMock:
+    coordinator = MagicMock()
+    coordinator.device_id = "test123"
+    coordinator.device_name = "Test Homevolt"
+    coordinator.firmware_version = "1.0.0"
+    coordinator.cluster_id = "test123_cluster"
+    coordinator.is_leader = len(units) > 1
+    coordinator.data = {"ems": units}
+    return coordinator
+
+
+def _unit(ecu_id: str, alarms: list[str], ecu_host: str = "") -> dict:
+    return {
+        "ecu_id": ecu_id,
+        "ecu_host": ecu_host,
+        "ems_data": {"alarm_str": alarms, "warning_str": [], "info_str": []},
+    }
+
+
+class TestFollowerAlarmSensor:
+    """Alarm sensors for follower units listed in the leader's ems list."""
+
+    def test_follower_alarm_on(self) -> None:
+        """A follower's active alarms turn its sensor on and are listed."""
+        coordinator = _leader_coordinator(
+            [_unit("test123", []), _unit("follower1", ["Grid fault"], "10.0.0.2")]
+        )
+        sensor = AlarmBinarySensor(coordinator, ecu_id="follower1")
+        assert sensor.is_on is True
+        assert sensor.available is True
+        assert sensor.extra_state_attributes["alarms"] == ["Grid fault"]
+
+    def test_matched_by_ecu_id_not_position(self) -> None:
+        """Reordering the ems list does not change which unit is read."""
+        units = [_unit("follower1", ["Grid fault"], "10.0.0.2"), _unit("test123", [])]
+        coordinator = _leader_coordinator(units)
+        follower = AlarmBinarySensor(coordinator, ecu_id="follower1")
+        local = AlarmBinarySensor(coordinator)
+        assert follower.is_on is True
+        assert local.is_on is False
+
+    def test_follower_identity(self) -> None:
+        """Follower sensor uses the follower's device identifier and a distinct unique id."""
+        coordinator = _leader_coordinator([_unit("test123", []), _unit("follower1", [], "h")])
+        sensor = AlarmBinarySensor(coordinator, ecu_id="follower1")
+        assert ("homevolt_local", "follower1") in sensor.device_info["identifiers"]
+        assert sensor.unique_id == "test123_follower1_alarm"
+        assert sensor.unique_id != "follower1_alarm"
+
+    def test_follower_unavailable_when_missing(self) -> None:
+        """A follower that disappears from the list becomes unavailable."""
+        coordinator = _leader_coordinator([_unit("test123", [])])
+        sensor = AlarmBinarySensor(coordinator, ecu_id="follower1")
+        assert sensor.available is False
+        assert sensor.is_on is None
+
+
+async def test_follower_alarm_sensors_added_on_leader() -> None:
+    """One extra Alarm sensor per follower ecu_id; none for the cluster device."""
+    coordinator = _leader_coordinator(
+        [
+            _unit("follower1", ["x"], "10.0.0.2"),
+            _unit("test123", []),
+            _unit("follower2", [], "10.0.0.3"),
+        ]
+    )
+    entry = MagicMock()
+    entry.runtime_data = coordinator
+    added: list = []
+
+    await async_setup_entry(MagicMock(), entry, added.extend)
+
+    ids = sorted(e.unique_id for e in added if isinstance(e, AlarmBinarySensor))
+    assert ids == ["test123_alarm", "test123_follower1_alarm", "test123_follower2_alarm"]
+    assert not any("cluster" in (e.unique_id or "") for e in added)
