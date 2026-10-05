@@ -27,6 +27,7 @@ from custom_components.homevolt_local import (
 )
 from custom_components.homevolt_local.api import (
     HomevoltAuthError,
+    HomevoltCommandError,
     HomevoltConnectionError,
     HomevoltRateLimitError,
 )
@@ -432,3 +433,46 @@ class TestAsyncUnloadEntry:
         # Services should still be registered since unload failed
         for svc in all_services:
             assert hass.services.has_service(DOMAIN, svc)
+
+
+async def test_set_schedule_command_error_is_translated(
+    hass: HomeAssistant,
+    mock_config_data: dict,
+    mock_all_data: dict,
+) -> None:
+    """Test a failing console command raises a translated HomeAssistantError."""
+    from homeassistant.exceptions import HomeAssistantError
+    from homeassistant.helpers import device_registry as dr
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    entry = MockConfigEntry(domain=DOMAIN, data=mock_config_data, unique_id="test123")
+    entry.add_to_hass(hass)
+
+    with patch("custom_components.homevolt_local.HomevoltApi", autospec=True) as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api.test_connection = AsyncMock(return_value=True)
+        mock_api.get_all_data = AsyncMock(return_value=mock_all_data)
+        mock_api.set_schedule = AsyncMock(side_effect=HomevoltCommandError("bad schedule"))
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        device = dr.async_get(hass).async_get_device_by_identifier(
+            (DOMAIN, "test123"), entry.entry_id
+        )
+        assert device is not None
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SET_SCHEDULE,
+                {
+                    "device_id": device.id,
+                    "schedule": [{"type": 0, "setpoint": 0}],
+                },
+                blocking=True,
+            )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "command_failed"
+    assert exc_info.value.translation_placeholders == {"error": "bad schedule"}

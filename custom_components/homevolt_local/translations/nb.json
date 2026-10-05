@@ -79,6 +79,9 @@
     },
     "not_local_mode": {
       "message": "Kan ikke sette tidsplan: enheten er ikke i lokal modus. Aktiver 'Lokale innstillinger' først for å forhindre fjernoverstyringer fra Tibber."
+    },
+    "command_failed": {
+      "message": "Kommandoen mislyktes: {error}"
     }
   },
   "services": {

@@ -79,6 +79,9 @@
     },
     "not_local_mode": {
       "message": "Kan schema niet instellen: apparaat is niet in lokale modus. Schakel eerst 'Lokale instellingen' in om externe overschrijvingen van Tibber te voorkomen."
+    },
+    "command_failed": {
+      "message": "Opdracht mislukt: {error}"
     }
   },
   "services": {

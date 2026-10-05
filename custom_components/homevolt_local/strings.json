@@ -79,6 +79,9 @@
     },
     "not_local_mode": {
       "message": "Cannot set schedule: device is not in local mode. Enable 'Settings local' first to prevent remote overrides from Tibber."
+    },
+    "command_failed": {
+      "message": "Command failed: {error}"
     }
   },
   "services": {

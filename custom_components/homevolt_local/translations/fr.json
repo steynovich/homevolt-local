@@ -79,6 +79,9 @@
     },
     "not_local_mode": {
       "message": "Impossible de définir le programme : l'appareil n'est pas en mode local. Activez d'abord « Paramètres locaux » pour empêcher les modifications distantes de Tibber."
+    },
+    "command_failed": {
+      "message": "Échec de la commande : {error}"
     }
   },
   "services": {

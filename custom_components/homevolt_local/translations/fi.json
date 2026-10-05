@@ -79,6 +79,9 @@
     },
     "not_local_mode": {
       "message": "Aikataulua ei voi asettaa: laite ei ole paikallisessa tilassa. Ota ensin käyttöön 'Paikalliset asetukset' estääksesi Tibberin etämuutokset."
+    },
+    "command_failed": {
+      "message": "Komento epäonnistui: {error}"
     }
   },
   "services": {

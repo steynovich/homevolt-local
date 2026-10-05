@@ -79,6 +79,9 @@
     },
     "not_local_mode": {
       "message": "Zeitplan kann nicht gesetzt werden: Gerät ist nicht im lokalen Modus. Aktivieren Sie zuerst 'Lokale Einstellungen', um Fernsteuerung durch Tibber zu verhindern."
+    },
+    "command_failed": {
+      "message": "Befehl fehlgeschlagen: {error}"
     }
   },
   "services": {

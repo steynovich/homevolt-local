@@ -79,6 +79,9 @@
     },
     "not_local_mode": {
       "message": "Kan inte sätta schema: enheten är inte i lokalt läge. Aktivera 'Lokala inställningar' först för att förhindra fjärrstyrning från Tibber."
+    },
+    "command_failed": {
+      "message": "Kommandot misslyckades: {error}"
     }
   },
   "services": {
