@@ -47,15 +47,8 @@ SERVICE_CLEAR_SCHEDULE_SCHEMA = vol.Schema(_DEVICE_ID)
 SERVICE_SET_IDLE_SCHEMA = vol.Schema(
     {**_DEVICE_ID, vol.Optional("offline", default=False): cv.boolean}
 )
-# set_charge, set_discharge, set_grid_charge, set_grid_discharge, set_solar_charge and
-# set_full_solar_export all take the same fields.
+# Shared by every service that takes only a setpoint and SOC limits.
 _SETPOINT_SOC_SCHEMA = vol.Schema({**_DEVICE_ID, **_SETPOINT, **_SOC_LIMITS})
-SERVICE_SET_CHARGE_SCHEMA = _SETPOINT_SOC_SCHEMA
-SERVICE_SET_DISCHARGE_SCHEMA = _SETPOINT_SOC_SCHEMA
-SERVICE_SET_GRID_CHARGE_SCHEMA = _SETPOINT_SOC_SCHEMA
-SERVICE_SET_GRID_DISCHARGE_SCHEMA = _SETPOINT_SOC_SCHEMA
-SERVICE_SET_SOLAR_CHARGE_SCHEMA = _SETPOINT_SOC_SCHEMA
-SERVICE_SET_FULL_SOLAR_EXPORT_SCHEMA = _SETPOINT_SOC_SCHEMA
 SERVICE_SET_GRID_CHARGE_DISCHARGE_SCHEMA = vol.Schema(
     {
         **_DEVICE_ID,
@@ -118,22 +111,15 @@ class _ServiceSpec:
     refresh: bool = True
 
 
-def _setpoint_soc(data: dict[str, Any]) -> tuple[int | None, int | None, int | None]:
-    """Extract (setpoint, min_soc, max_soc) from service data."""
-    return data.get("setpoint"), data.get("min_soc"), data.get("max_soc")
+def _setpoint_soc(data: dict[str, Any]) -> dict[str, Any]:
+    """Pick the setpoint/SOC keyword arguments from service data."""
+    return {k: data.get(k) for k in ("setpoint", "min_soc", "max_soc")}
 
 
-def _split_setpoints(
-    data: dict[str, Any],
-) -> tuple[int | None, int | None, int | None, int | None, int | None]:
-    """Extract (setpoint, charge_setpoint, discharge_setpoint, min_soc, max_soc)."""
-    return (
-        data.get("setpoint"),
-        data.get("charge_setpoint"),
-        data.get("discharge_setpoint"),
-        data.get("min_soc"),
-        data.get("max_soc"),
-    )
+def _split_setpoints(data: dict[str, Any]) -> dict[str, Any]:
+    """Pick the split charge/discharge keyword arguments from service data."""
+    keys = ("setpoint", "charge_setpoint", "discharge_setpoint", "min_soc", "max_soc")
+    return {k: data.get(k) for k in keys}
 
 
 SERVICES: dict[str, _ServiceSpec] = {
@@ -145,36 +131,36 @@ SERVICES: dict[str, _ServiceSpec] = {
         command=lambda api, data: api.set_idle(data.get("offline", False)),
     ),
     SERVICE_SET_CHARGE: _ServiceSpec(
-        schema=SERVICE_SET_CHARGE_SCHEMA,
-        command=lambda api, data: api.set_charge(*_setpoint_soc(data)),
+        schema=_SETPOINT_SOC_SCHEMA,
+        command=lambda api, data: api.set_charge(**_setpoint_soc(data)),
     ),
     SERVICE_SET_DISCHARGE: _ServiceSpec(
-        schema=SERVICE_SET_DISCHARGE_SCHEMA,
-        command=lambda api, data: api.set_discharge(*_setpoint_soc(data)),
+        schema=_SETPOINT_SOC_SCHEMA,
+        command=lambda api, data: api.set_discharge(**_setpoint_soc(data)),
     ),
     SERVICE_SET_GRID_CHARGE: _ServiceSpec(
-        schema=SERVICE_SET_GRID_CHARGE_SCHEMA,
-        command=lambda api, data: api.set_grid_charge(*_setpoint_soc(data)),
+        schema=_SETPOINT_SOC_SCHEMA,
+        command=lambda api, data: api.set_grid_charge(**_setpoint_soc(data)),
     ),
     SERVICE_SET_GRID_DISCHARGE: _ServiceSpec(
-        schema=SERVICE_SET_GRID_DISCHARGE_SCHEMA,
-        command=lambda api, data: api.set_grid_discharge(*_setpoint_soc(data)),
+        schema=_SETPOINT_SOC_SCHEMA,
+        command=lambda api, data: api.set_grid_discharge(**_setpoint_soc(data)),
     ),
     SERVICE_SET_GRID_CHARGE_DISCHARGE: _ServiceSpec(
         schema=SERVICE_SET_GRID_CHARGE_DISCHARGE_SCHEMA,
-        command=lambda api, data: api.set_grid_charge_discharge(*_split_setpoints(data)),
+        command=lambda api, data: api.set_grid_charge_discharge(**_split_setpoints(data)),
     ),
     SERVICE_SET_SOLAR_CHARGE: _ServiceSpec(
-        schema=SERVICE_SET_SOLAR_CHARGE_SCHEMA,
-        command=lambda api, data: api.set_solar_charge(*_setpoint_soc(data)),
+        schema=_SETPOINT_SOC_SCHEMA,
+        command=lambda api, data: api.set_solar_charge(**_setpoint_soc(data)),
     ),
     SERVICE_SET_SOLAR_CHARGE_DISCHARGE: _ServiceSpec(
         schema=SERVICE_SET_SOLAR_CHARGE_DISCHARGE_SCHEMA,
-        command=lambda api, data: api.set_solar_charge_discharge(*_split_setpoints(data)),
+        command=lambda api, data: api.set_solar_charge_discharge(**_split_setpoints(data)),
     ),
     SERVICE_SET_FULL_SOLAR_EXPORT: _ServiceSpec(
-        schema=SERVICE_SET_FULL_SOLAR_EXPORT_SCHEMA,
-        command=lambda api, data: api.set_full_solar_export(*_setpoint_soc(data)),
+        schema=_SETPOINT_SOC_SCHEMA,
+        command=lambda api, data: api.set_full_solar_export(**_setpoint_soc(data)),
     ),
     SERVICE_SET_SCHEDULE: _ServiceSpec(
         schema=SERVICE_SET_SCHEDULE_SCHEMA,

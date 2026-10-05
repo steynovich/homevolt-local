@@ -410,4 +410,4 @@ async def test_set_charge_passes_arguments_and_refreshes(
             blocking=True,
         )
 
-    api.set_charge.assert_awaited_once_with(500, 10, 90)
+    api.set_charge.assert_awaited_once_with(setpoint=500, min_soc=10, max_soc=90)
