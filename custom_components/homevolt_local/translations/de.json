@@ -494,6 +494,9 @@
       "info_messages": {
         "name": "Infomeldungen"
       },
+      "error_report_problems": {
+        "name": "Probleme in Teilsystemen"
+      },
       "avail_charge_power": {
         "name": "Verfügbare Ladeleistung"
       },

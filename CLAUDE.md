@@ -144,11 +144,14 @@ These are the details that cost time when unknown:
 - Auth is optional (`BasicAuth` only when a password is set; default username `admin`). Repeated failed
   auth makes the device return 429.
 - `const.py` lists more endpoints than the coordinator polls (`/nodes.json`, `/ct.json`,
-  `/node_metrics.json`, `/error_report.json`) — available on the API client but unused by entities.
+  `/node_metrics.json`) — available on the API client but unused by entities.
 - **`/error_report.json` differs from the OpenAPI spec.** Real devices return a bare array of
   per-subsystem health entries (`activated` ok/error/warning/unknown, `message`, `details`) with no
-  severity or numeric error code, so it is deliberately not used for alarms. See
-  `docs/research/error-report-endpoint.md`.
+  severity or numeric error code, so it is deliberately not used for alarms. It is polled by its own
+  `HomevoltErrorReportCoordinator` (5 min, `coordinator.error_report_coordinator`, outside
+  `get_all_data()`, first refresh non-fatal, no stale-cache fallback) and feeds only the per-unit
+  `HomevoltErrorReportSensor` ("Subsystem problems": count of `error`/`warning` checks, `unknown`
+  ignored). See `docs/research/error-report-endpoint.md`.
 - **Leader vs follower `/ems.json`.** A leader's lists every unit, each with `ecu_id` and `ecu_host`.
   A follower's lists only itself.
 

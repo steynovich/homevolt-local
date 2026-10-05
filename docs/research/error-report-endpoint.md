@@ -7,9 +7,10 @@ tibber/homevolt-local-api-doc (`API_DOCUMENTATION.yaml`, `main`). No POST reques
 ## Conclusion
 
 The endpoint cannot provide a severity or a numeric alarm code, so it is not usable for the "structured
-alarms with severity + error code" goal. **No integration code changes.** What it does offer is a
+alarms with severity + error code" goal. **Not usable for alarms.** What it does offer is a
 per-subsystem health list with a coarse four-state status (`ok` / `warning` / `error` / `unknown`), which is
-a different feature (subsystem health diagnostics), not alarms. The existing `alarm_str` / `warning_str` /
+a different feature (subsystem health diagnostics), not alarms. That feature now exists as the
+"Subsystem problems" diagnostic sensor (count of `error`/`warning` checks per unit). The existing `alarm_str` / `warning_str` /
 `info_str` data from `/ems.json` already carries the EMS alarm content.
 
 ## Observed payload

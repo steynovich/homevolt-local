@@ -12,13 +12,38 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HomevoltApi, HomevoltApiError, HomevoltAuthError, HomevoltRateLimitError
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import DOMAIN, ERROR_REPORT_SCAN_INTERVAL, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
 # Pattern to extract device ID from hostname
 # Examples: "homevolt-abc123.local" or "homevolt1.domain.com"
 HOSTNAME_PATTERN = re.compile(r"homevolt[_-]?([a-zA-Z0-9]+)")
+
+
+# /error_report.json statuses that count as a problem; "ok" and "unknown" (check not
+# applicable) do not.
+PROBLEM_STATUSES = frozenset({"error", "warning"})
+
+
+def _coordinator_error(err: HomevoltApiError, host: str) -> ConfigEntryAuthFailed | UpdateFailed:
+    """Translate an API error into the exception a coordinator should raise."""
+    if isinstance(err, HomevoltAuthError):
+        return ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+            translation_placeholders={"host": host},
+        )
+    if isinstance(err, HomevoltRateLimitError):
+        return ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="rate_limited",
+        )
+    return UpdateFailed(
+        translation_domain=DOMAIN,
+        translation_key="cannot_connect",
+        translation_placeholders={"host": host},
+    )
 
 
 def _extract_device_id_from_host(host: str) -> str | None:
@@ -44,6 +69,45 @@ def _extract_ecu_id(ems_data: dict[str, Any]) -> str | None:
     return None
 
 
+class HomevoltErrorReportCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
+    """Polls /error_report.json and exposes the failing subsystem checks.
+
+    ``data`` is the list of checks whose status is ``error`` or ``warning``, each
+    as ``{"subsystem", "check", "status", "message"}``.
+    """
+
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, api: HomevoltApi, host: str) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN} error report",
+            update_interval=ERROR_REPORT_SCAN_INTERVAL,
+        )
+        self.api = api
+        self._host = host
+
+    async def _async_update_data(self) -> list[dict[str, Any]]:
+        """Fetch the report and keep only the problem entries."""
+        try:
+            report = await self.api.get_error_report()
+        except HomevoltApiError as err:
+            raise _coordinator_error(err, self._host) from err
+
+        return [
+            {
+                "subsystem": entry.get("sub_system_name"),
+                "check": entry.get("error_name"),
+                "status": entry["activated"],
+                "message": entry.get("message"),
+            }
+            for entry in report
+            if isinstance(entry, dict) and entry.get("activated") in PROBLEM_STATUSES
+        ]
+
+
 class HomevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Homevolt Local data updates."""
 
@@ -52,6 +116,9 @@ class HomevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     #: Device registry entry id of the ECU device, filled in during setup once the
     #: device has been registered. Used as ``via_device_id`` for the cluster device.
     ecu_device_entry_id: str | None = None
+
+    #: Slower-polling companion coordinator for /error_report.json, set during setup.
+    error_report_coordinator: HomevoltErrorReportCoordinator | None = None
 
     def __init__(
         self,
@@ -151,20 +218,5 @@ class HomevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch data from API."""
         try:
             return await self.api.get_all_data()
-        except HomevoltAuthError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"host": self._host},
-            ) from err
-        except HomevoltRateLimitError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="rate_limited",
-            ) from err
         except HomevoltApiError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"host": self._host},
-            ) from err
+            raise _coordinator_error(err, self._host) from err

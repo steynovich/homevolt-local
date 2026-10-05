@@ -494,6 +494,9 @@
       "info_messages": {
         "name": "Tietoviestit"
       },
+      "error_report_problems": {
+        "name": "Alijärjestelmien ongelmat"
+      },
       "avail_charge_power": {
         "name": "Käytettävissä oleva latausteho"
       },

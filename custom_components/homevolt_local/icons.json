@@ -35,6 +35,9 @@
       }
     },
     "sensor": {
+      "error_report_problems": {
+        "default": "mdi:alert-circle-outline"
+      },
       "battery_soc": {
         "default": "mdi:battery",
         "state": {

@@ -28,6 +28,9 @@ async def async_get_config_entry_diagnostics(
         "data": async_redact_data(coordinator.data, TO_REDACT) if coordinator.data else None,
     }
 
+    if coordinator.error_report_coordinator is not None:
+        coordinator_info["error_report_problems"] = coordinator.error_report_coordinator.data
+
     # Add cluster info for leader devices
     if coordinator.is_leader:
         coordinator_info["cluster_id"] = coordinator.cluster_id

@@ -27,6 +27,8 @@ ENDPOINT_CONSOLE = "/console.json"
 
 # Update interval
 SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+# Subsystem health checks change slowly, so /error_report.json is polled less often
+ERROR_REPORT_SCAN_INTERVAL = timedelta(minutes=5)
 
 # Device info
 MANUFACTURER = "Tibber"

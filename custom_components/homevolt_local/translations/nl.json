@@ -494,6 +494,9 @@
       "info_messages": {
         "name": "Infomeldingen"
       },
+      "error_report_problems": {
+        "name": "Subsysteemproblemen"
+      },
       "avail_charge_power": {
         "name": "Beschikbaar laadvermogen"
       },

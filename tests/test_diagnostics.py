@@ -47,6 +47,10 @@ class TestDiagnostics:
         coordinator.device_name = "My Homevolt"
         coordinator.firmware_version = "1.2.3"
         coordinator.last_update_success = True
+        coordinator.error_report_coordinator = MagicMock()
+        coordinator.error_report_coordinator.data = [
+            {"subsystem": "CONNECTIVITY", "check": "lte", "status": "error", "message": "x"}
+        ]
         coordinator.data = {
             "ems": {
                 "ems": [
@@ -71,6 +75,17 @@ class TestDiagnostics:
 
         assert "entry" in result
         assert "coordinator" in result
+
+    async def test_diagnostics_includes_error_report_problems(
+        self, hass: HomeAssistant, mock_entry: MagicMock, mock_coordinator: MagicMock
+    ) -> None:
+        """Test diagnostics includes the subsystem problem list."""
+        mock_entry.runtime_data = mock_coordinator
+
+        result = await async_get_config_entry_diagnostics(hass, mock_entry)
+
+        problems = result["coordinator"]["error_report_problems"]
+        assert problems[0]["check"] == "lte"
 
     async def test_diagnostics_entry_data(
         self, hass: HomeAssistant, mock_entry: MagicMock, mock_coordinator: MagicMock

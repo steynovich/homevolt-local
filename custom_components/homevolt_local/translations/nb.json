@@ -494,6 +494,9 @@
       "info_messages": {
         "name": "Infomeldinger"
       },
+      "error_report_problems": {
+        "name": "Delsystemproblemer"
+      },
       "avail_charge_power": {
         "name": "Tilgjengelig ladeeffekt"
       },

@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HomevoltConfigEntry
-from .coordinator import HomevoltCoordinator
+from .coordinator import HomevoltCoordinator, HomevoltErrorReportCoordinator
 from .device import DeviceType, get_cluster_device_info, get_ecu_device_info, get_local_ems
 
 _LOGGER = logging.getLogger(__name__)
@@ -741,7 +741,7 @@ async def async_setup_entry(
     """Set up Homevolt sensors based on a config entry."""
     coordinator = entry.runtime_data
 
-    entities: list[HomevoltSensor] = []
+    entities: list[SensorEntity] = []
 
     # Determine which external sensor types are available
     has_grid = _has_external_sensor(coordinator, "grid")
@@ -784,7 +784,50 @@ async def async_setup_entry(
         for description in CLUSTER_ONLY_SENSORS:
             entities.append(HomevoltSensor(coordinator, description, DeviceType.CLUSTER))
 
+    if coordinator.error_report_coordinator is not None:
+        entities.append(
+            HomevoltErrorReportSensor(coordinator, coordinator.error_report_coordinator)
+        )
+
     async_add_entities(entities)
+
+
+class HomevoltErrorReportSensor(CoordinatorEntity[HomevoltErrorReportCoordinator], SensorEntity):
+    """Number of subsystem checks on the unit that report an error or warning."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "error_report_problems"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        main_coordinator: HomevoltCoordinator,
+        coordinator: HomevoltErrorReportCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{main_coordinator.device_id}_error_report_problems"
+        self._attr_device_info = get_ecu_device_info(main_coordinator)
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the number of failing checks."""
+        if self.coordinator.data is None:
+            return None
+        return len(self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the failing checks and a count per status."""
+        problems = self.coordinator.data
+        if problems is None:
+            return None
+        return {
+            "problems": problems,
+            "errors": sum(1 for p in problems if p["status"] == "error"),
+            "warnings": sum(1 for p in problems if p["status"] == "warning"),
+        }
 
 
 class HomevoltSensor(CoordinatorEntity[HomevoltCoordinator], SensorEntity):

@@ -274,9 +274,18 @@ class HomevoltApi:
                 "Enable local mode first to prevent remote overrides."
             )
 
-    async def get_error_report(self) -> dict[str, Any]:
-        """Get error report."""
-        return await self._request_cached(ENDPOINT_ERROR_REPORT)
+    async def get_error_report(self) -> list[dict[str, Any]]:
+        """Get the per-subsystem health report.
+
+        Unlike the other getters this bypasses the response cache: the problem count
+        must go unavailable when the device stops answering instead of replaying a
+        stale "all clear" for up to CACHE_EXPIRY seconds. The device returns a bare
+        JSON array, not an object.
+        """
+        report: Any = await self._request(ENDPOINT_ERROR_REPORT)
+        if not isinstance(report, list):
+            raise HomevoltApiError(f"Unexpected {ENDPOINT_ERROR_REPORT} payload")
+        return cast(list[dict[str, Any]], report)
 
     async def get_ota_manifest(self) -> dict[str, Any]:
         """Get OTA manifest with version info."""

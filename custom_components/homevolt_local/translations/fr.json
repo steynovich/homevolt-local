@@ -494,6 +494,9 @@
       "info_messages": {
         "name": "Messages d'information"
       },
+      "error_report_problems": {
+        "name": "Problèmes des sous-systèmes"
+      },
       "avail_charge_power": {
         "name": "Puissance de charge disponible"
       },

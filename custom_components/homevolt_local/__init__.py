@@ -15,7 +15,7 @@ from .api import (
     HomevoltRateLimitError,
 )
 from .const import DOMAIN
-from .coordinator import HomevoltCoordinator
+from .coordinator import HomevoltCoordinator, HomevoltErrorReportCoordinator
 from .device import async_register_ecu_device
 from .services import async_setup_services, async_unload_services
 
@@ -67,6 +67,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
     coordinator.config_entry = entry
 
     await coordinator.async_config_entry_first_refresh()
+
+    # Non-fatal first refresh: this diagnostic data must never block setup, and older
+    # firmware may not serve the endpoint at all (the sensor just stays unavailable).
+    error_report = HomevoltErrorReportCoordinator(hass, api, host)
+    error_report.config_entry = entry
+    await error_report.async_refresh()
+    coordinator.error_report_coordinator = error_report
 
     entry.runtime_data = coordinator
 

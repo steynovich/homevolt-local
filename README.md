@@ -102,6 +102,7 @@ If your Homevolt device broadcasts mDNS (hostname starting with `homevolt`), Hom
 | EMS Mode | Cluster mode (Leader/Follower) | - |
 | Firmware Version | ECU firmware version | - |
 | Alarm/Warning/Info Messages | Count of active messages | - |
+| Subsystem Problems | Count of device health checks (`/error_report.json`, e.g. LTE, AC voltage) reporting an error or warning, polled every 5 minutes. The `problems` attribute lists them. Separate from the Alarm sensor, which only reflects EMS alarms | - |
 | Available Charge Power | Available power for charging | W |
 | Available Discharge Power | Available power for discharging | W |
 | Available Charge Energy | Available energy for charging | Wh |
@@ -146,7 +147,7 @@ If your Homevolt device broadcasts mDNS (hostname starting with `homevolt`), Hom
 | MQTT Valid | MQTT connection status | Diagnostic |
 | WiFi Valid | WiFi connection status | Diagnostic |
 | LTE Valid | LTE/cellular connection status | Diagnostic |
-| Alarm | On while the unit reports active alarms (problem). The `alarms`, `warnings` and `info` attributes list the messages, and only alarms affect the state. Each unit has its own sensor and the cluster device has none. A leader also gets one for each follower unit (matched by `ecu_id`), shown on that follower's device | - |
+| Alarm | On while the unit reports active alarms (problem). The `alarms`, `warnings` and `info` attributes list the messages, and only alarms affect the state. Each unit has its own sensor, on its own device, and the cluster device has none. A leader does not add sensors for its followers: add each follower as its own entry to see its alarms | - |
 
 ### Switches
 
