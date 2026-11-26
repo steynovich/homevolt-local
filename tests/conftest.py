@@ -1,12 +1,25 @@
 """Fixtures for Homevolt Local tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 pytest_plugins = "pytest_homeassistant_custom_component"
+
+
+def device_info_dict(device_info: Any) -> dict[str, Any]:
+    """Return a DeviceInfo's set fields as a dict, on any supported HA version.
+
+    HA 2026.12 made DeviceInfo a dataclass with ``as_dict()``; dict-style access on it is
+    deprecated. Older versions still use a TypedDict.
+    """
+    assert device_info is not None
+    if hasattr(device_info, "as_dict"):
+        return dict(device_info.as_dict())
+    return dict(device_info)
 
 
 @pytest.fixture(autouse=True)

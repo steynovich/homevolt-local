@@ -22,6 +22,8 @@ from custom_components.homevolt_local.button import (
     HomevoltSetSolarChargeButton,
 )
 
+from .conftest import device_info_dict
+
 
 class TestButtonConstants:
     """Test button platform constants."""
@@ -92,7 +94,7 @@ class TestHomevoltClearScheduleButton:
 
         button = HomevoltClearScheduleButton(coordinator)
 
-        device_info = button.device_info
+        device_info = device_info_dict(button.device_info)
         assert device_info is not None
         assert ("homevolt_local", "test123") in device_info["identifiers"]
         assert device_info["name"] == "Test Homevolt"
@@ -216,7 +218,7 @@ class TestHomevoltSetIdleButton:
 
         button = HomevoltSetIdleButton(coordinator)
 
-        device_info = button.device_info
+        device_info = device_info_dict(button.device_info)
         assert device_info is not None
         assert ("homevolt_local", "test123") in device_info["identifiers"]
         assert device_info["name"] == "Test Homevolt"
@@ -717,7 +719,7 @@ class TestHomevoltRebootButton:
 
         button = HomevoltRebootButton(coordinator)
 
-        device_info = button.device_info
+        device_info = device_info_dict(button.device_info)
         assert device_info is not None
         assert ("homevolt_local", "test123") in device_info["identifiers"]
         assert device_info["name"] == "Test Homevolt"

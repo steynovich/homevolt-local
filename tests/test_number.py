@@ -12,6 +12,8 @@ from custom_components.homevolt_local.number import (
     _get_param_value,
 )
 
+from .conftest import device_info_dict
+
 
 class TestGetParamValue:
     """Test _get_param_value helper function."""
@@ -290,7 +292,7 @@ class TestHomevoltNumber:
         description = next(n for n in NUMBERS if n.key == "ecu_main_fuse_size_a")
         number = HomevoltNumber(coordinator, description)
 
-        device_info = number.device_info
+        device_info = device_info_dict(number.device_info)
         assert device_info is not None
         assert ("homevolt_local", "test123") in device_info["identifiers"]
         assert device_info["name"] == "Test Homevolt"

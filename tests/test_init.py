@@ -117,6 +117,7 @@ async def test_setup_entry_registers_devices(
     mock_config_data: dict,
     mock_all_data: dict,
     mock_ems_data_leader: dict,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup registers the ECU device and links the cluster device to it."""
     from homeassistant.helpers import device_registry as dr
@@ -155,6 +156,9 @@ async def test_setup_entry_registers_devices(
     )
     assert cluster_device is not None
     assert cluster_device.via_device_id == ecu_device.id
+
+    # HA 2026.12 made DeviceInfo a dataclass; dict-style use of it logs a deprecation
+    assert "device infos are dataclasses" not in caplog.text
 
 
 class TestAsyncUnloadEntry:

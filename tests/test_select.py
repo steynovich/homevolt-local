@@ -12,6 +12,8 @@ from custom_components.homevolt_local.select import (
     _get_param_string,
 )
 
+from .conftest import device_info_dict
+
 
 class TestGetParamString:
     """Test _get_param_string helper function."""
@@ -196,7 +198,7 @@ class TestHomevoltSelect:
         description = SELECTS[0]
         select = HomevoltSelect(coordinator, description)
 
-        device_info = select.device_info
+        device_info = device_info_dict(select.device_info)
         assert device_info is not None
         assert ("homevolt_local", "test123") in device_info["identifiers"]
         assert device_info["name"] == "Test Homevolt"

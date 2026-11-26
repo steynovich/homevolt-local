@@ -20,6 +20,8 @@ from custom_components.homevolt_local.binary_sensor import (
     async_setup_entry,
 )
 
+from .conftest import device_info_dict
+
 
 class TestGetParamBool:
     """Test _get_param_bool helper function."""
@@ -161,7 +163,7 @@ class TestHomevoltBinarySensor:
         description = BINARY_SENSORS[0]
         sensor = HomevoltBinarySensor(coordinator, description)
 
-        device_info = sensor.device_info
+        device_info = device_info_dict(sensor.device_info)
         assert device_info is not None
         assert ("homevolt_local", "test123") in device_info["identifiers"]
         assert device_info["name"] == "Test Homevolt"
@@ -345,7 +347,7 @@ class TestAlarmBinarySensor:
         assert sensor.device_class == BinarySensorDeviceClass.PROBLEM
         assert sensor.entity_category is None
         assert sensor.translation_key == "alarm"
-        assert ("homevolt_local", "test123") in sensor.device_info["identifiers"]
+        assert ("homevolt_local", "test123") in device_info_dict(sensor.device_info)["identifiers"]
 
     def test_off_when_no_alarms(self) -> None:
         """Test empty alarm list gives off with empty attributes."""

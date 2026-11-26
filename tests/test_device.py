@@ -16,6 +16,8 @@ from custom_components.homevolt_local.device import (
     get_ecu_device_info,
 )
 
+from .conftest import device_info_dict
+
 
 class TestDeviceType:
     """Test DeviceType enum."""
@@ -53,7 +55,7 @@ class TestDeviceInfoHelpers:
             },
         )
 
-        device_info = get_ecu_device_info(coordinator)
+        device_info = device_info_dict(get_ecu_device_info(coordinator))
 
         assert device_info["identifiers"] == {(DOMAIN, "test123")}
         assert device_info["name"] == "My Battery"
@@ -76,7 +78,7 @@ class TestDeviceInfoHelpers:
 
         coordinator.ecu_device_entry_id = "ecu-registry-id"
 
-        device_info = get_cluster_device_info(coordinator)
+        device_info = device_info_dict(get_cluster_device_info(coordinator))
 
         assert device_info["identifiers"] == {(DOMAIN, "test123_cluster")}
         assert device_info["name"] == "My Battery Cluster"
@@ -97,7 +99,7 @@ class TestDeviceInfoHelpers:
 
         assert coordinator.ecu_device_entry_id is None
 
-        device_info = get_cluster_device_info(coordinator)
+        device_info = device_info_dict(get_cluster_device_info(coordinator))
 
         assert "via_device_id" not in device_info
 

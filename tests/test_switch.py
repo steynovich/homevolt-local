@@ -12,6 +12,8 @@ from custom_components.homevolt_local.switch import (
     _get_param_bool,
 )
 
+from .conftest import device_info_dict
+
 
 class TestGetParamBool:
     """Test _get_param_bool helper function."""
@@ -271,7 +273,7 @@ class TestHomevoltSwitch:
         description = SWITCHES[0]
         switch = HomevoltSwitch(coordinator, description)
 
-        device_info = switch.device_info
+        device_info = device_info_dict(switch.device_info)
         assert device_info is not None
         assert ("homevolt_local", "test123") in device_info["identifiers"]
         assert device_info["name"] == "Test Homevolt"
